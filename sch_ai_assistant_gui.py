@@ -163,7 +163,7 @@ class SchAiAssistantDialog(wx.Dialog):
         self.plugin_dir = plugin_dir
         self.api_key = self._load_api_key()
         self._last_image_bytes = None
-        # _msg_total_h tracks total inner panel height for scrolling
+        # Chat log uses wx.TextCtrl for native scrolling
         self._init_ui()
         self.CentreOnParent()
         _log("Dialog initialized")
@@ -195,22 +195,11 @@ class SchAiAssistantDialog(wx.Dialog):
         # Left: Chat
         self.chat_panel = wx.Panel(self.splitter)
         chat_sizer = wx.BoxSizer(wx.VERTICAL)
-        # Scrollable message area: inner panel + ScrolledWindow
-        self.msg_window = wx.ScrolledWindow(self.chat_panel, style=wx.VSCROLL)
+        # Chat log (text-based, scrolling works natively)
+        self.msg_window = wx.TextCtrl(self.chat_panel, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH2|wx.HSCROLL)
         self.msg_window.SetMinSize((300,100))
-        self.msg_inner = wx.Panel(self.msg_window)
-        self.msg_inner.SetBackgroundColour(wx.Colour(250,250,250))
-        # Refresh inner panel on scroll to fix content clipping
-        try: self.msg_window.Bind(wx.EVT_SCROLLWIN, lambda e: (e.Skip(), self.msg_inner.Refresh()))
-        except Exception: pass
-        self.msg_inner.SetSize((450, 200))
-        self.msg_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.msg_inner.SetSizer(self.msg_sizer)
-        self._msg_total_h = 0
-        welcome = ChatMessagePanel(self.msg_inner, "system", "Welcome! Paste a datasheet pin diagram, then click Send.")
-        welcome.Disable()
-        self.msg_sizer.Add(welcome, 0, wx.EXPAND|wx.BOTTOM, 8)
-        self._msg_total_h = 80
+        self.msg_window.SetBackgroundColour(wx.Colour(250,250,250))
+        self.msg_window.AppendText("*** Welcome! Paste a datasheet pin diagram, then click Send. ***\n")
         chat_sizer.Add(self.msg_window, 1, wx.EXPAND|wx.ALL, 4)
 
         # Input bar
@@ -471,28 +460,23 @@ class SchAiAssistantDialog(wx.Dialog):
             wx.CallAfter(lambda: (self._remove_last_msg(), self._add_msg("ai", f"Error: {e}")))
 
     def _add_msg(self, role, text, image_bytes=None):
-        msg = ChatMessagePanel(self.msg_inner, role, text, image_bytes)
-        self.msg_sizer.Add(msg, 0, wx.EXPAND|wx.BOTTOM, 8)
-        # Estimate height: cap at 800px per message
-        lines = max(1, len(text) // 35 + text.count('\n') + 1)
-        h = min(40 + lines * 18 + (70 if image_bytes else 0), 800)
-        self._msg_total_h += h
-        self.msg_inner.SetSize((400, self._msg_total_h))
-        self.msg_inner.Layout()
-        self.msg_window.SetScrollbars(0, 1, 400, self._msg_total_h)
-        self.msg_window.Refresh()
+        """Append text to chat log."""
+        prefix = {"user": "[You]", "ai": "[AI]", "system": "[*]"}.get(role, "[ ]")
+        now = datetime.now().strftime("%H:%M")
+        line = f"{now} {prefix} {text}\n"
+        if image_bytes and len(image_bytes) > 10:
+            line += f"  [image attached, {len(image_bytes)} bytes]\n"
+        self.msg_window.AppendText(line)
+        # Scroll to bottom
+        self.msg_window.ShowPosition(self.msg_window.GetLastPosition())
 
     def _remove_last_msg(self):
-        cnt = self.msg_sizer.GetItemCount()
-        if cnt > 0:
-            item = self.msg_sizer.GetItem(cnt-1)
-            if item and item.GetWindow():
-                item.GetWindow().Destroy()
-                self._msg_total_h = max(80, self._msg_total_h - 90)
-                self.msg_inner.SetSize((400, self._msg_total_h))
-                self.msg_inner.Layout()
-                self.msg_window.SetScrollbars(0, 1, 400, self._msg_total_h)
-                self.msg_window.Refresh()
+        """Remove last line from chat log."""
+        text = self.msg_window.GetValue()
+        idx = text.rstrip().rfind('\n')
+        if idx >= 0:
+            self.msg_window.SetValue(text[:idx+1])
+            self.msg_window.ShowPosition(self.msg_window.GetLastPosition())
 
     def _on_copy_editor(self, event):
         pins = self.pin_grid.get_pins()
