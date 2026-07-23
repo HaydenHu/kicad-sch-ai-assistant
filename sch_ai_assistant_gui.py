@@ -30,14 +30,14 @@ SHAPE_CHOICES = ["line","inverted","clock","inverted_clock",
     "input_low","clock_low","output_low","non_logic"]
 SIDE_CHOICES = ["left","right","top","bottom"]
 
-class ThumbnailButton(wx.BitmapButton):
+class ThumbnailButton(wx.Panel):
     def __init__(self, parent, size=(100,80)):
-        empty = wx.Bitmap(size[0], size[1])
-        super().__init__(parent, bitmap=empty, size=size)
+        super().__init__(parent, size=size)
         self._png = b""
+        self._sb = wx.StaticBitmap(self, bitmap=wx.Bitmap(size[0], size[1]))
+        self._sb.Bind(wx.EVT_LEFT_DOWN, self._on_click)
         self.SetMinSize(size)
         self.SetToolTip("Click to enlarge")
-        self.Bind(wx.EVT_BUTTON, self._on_click)
 
     def set_image(self, png_bytes):
         self._png = png_bytes
@@ -49,21 +49,24 @@ class ThumbnailButton(wx.BitmapButton):
                     iw, ih = img.GetWidth(), img.GetHeight()
                     scale = min(w/iw, h/ih, 1.0)
                     bmp = wx.Bitmap(img.Scale(int(iw*scale), int(ih*scale)))
-                    self.SetBitmap(bmp)
+                    self._sb.SetBitmap(bmp)
                     self.SetToolTip("Click to enlarge")
+                    self.Layout()
                     return
             except Exception: pass
         empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
-        self.SetBitmap(empty)
+        self._sb.SetBitmap(empty)
         self.SetToolTip("No image")
+        self.Layout()
 
     def get_png(self): return self._png
 
     def clear(self):
         self._png = b""
         empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
-        self.SetBitmap(empty)
+        self._sb.SetBitmap(empty)
         self.SetToolTip("")
+        self.Layout()
 
     def _on_click(self, event):
         if self._png and len(self._png) > 10:
