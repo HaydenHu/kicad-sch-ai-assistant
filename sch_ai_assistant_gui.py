@@ -165,7 +165,7 @@ class PinTableGrid(gridlib.Grid):
 
 class SchAiAssistantDialog(wx.Dialog):
     def __init__(self, parent, plugin_dir):
-        super().__init__(parent, title=T("title"), size=(950,650),
+        super().__init__(parent, title=T("title"), size=(1100,750),
                          style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX)
         self.plugin_dir = plugin_dir
         self.api_key = self._load_api_key()
@@ -254,7 +254,7 @@ class SchAiAssistantDialog(wx.Dialog):
         rs.Add(self.pin_grid, 1, wx.EXPAND)
         right_panel.SetSizer(rs)
 
-        self.splitter.SplitVertically(self.chat_panel, right_panel, -350)
+        self.splitter.SplitVertically(self.chat_panel, right_panel, -420)
         main_sizer.Add(self.splitter, 1, wx.EXPAND|wx.ALL, 4)
         panel.SetSizer(main_sizer)
 
