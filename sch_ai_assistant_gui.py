@@ -8,6 +8,7 @@ from datetime import datetime
 
 import wx
 import wx.grid as gridlib
+from i18n import T
 
 DBG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug.log")
 
@@ -115,7 +116,7 @@ class ChatMessagePanel(wx.Panel):
         self.SetSizer(main); self.SetMinSize((350,-1))
 
     def _preview(self, png_bytes):
-        dlg = wx.Dialog(self, title="Preview", style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        dlg = wx.Dialog(self, title=T("preview_title"), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         dlg.SetSize((600,480)); p = wx.Panel(dlg); s = wx.BoxSizer(wx.VERTICAL)
         img = wx.Image(io.BytesIO(png_bytes))
         sc = min(580/img.GetWidth(), 440/img.GetHeight(), 1.0)
@@ -164,7 +165,7 @@ class PinTableGrid(gridlib.Grid):
 
 class SchAiAssistantDialog(wx.Dialog):
     def __init__(self, parent, plugin_dir):
-        super().__init__(parent, title="AI Pin Assistant", size=(950,650),
+        super().__init__(parent, title=T("title"), size=(950,650),
                          style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX)
         self.plugin_dir = plugin_dir
         self.api_key = self._load_api_key()
@@ -179,17 +180,17 @@ class SchAiAssistantDialog(wx.Dialog):
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         # Top bar
         top_bar = wx.BoxSizer(wx.HORIZONTAL)
-        self.settings_toggle = wx.Button(panel, label="Settings", size=(70,28))
+        self.settings_toggle = wx.Button(panel, label=T("settings_btn"), size=(70,28))
         self.settings_toggle.Bind(wx.EVT_BUTTON, self._on_settings)
         top_bar.Add(self.settings_toggle, 0, wx.RIGHT, 6)
-        self.copy_btn = wx.Button(panel, label="Copy for Editor", size=(150,28))
+        self.copy_btn = wx.Button(panel, label=T("copy_editor"), size=(150,28))
         self.copy_btn.SetBackgroundColour(wx.Colour(39, 174, 96))  # green
         self.copy_btn.Bind(wx.EVT_BUTTON, self._on_copy_editor)
         top_bar.Add(self.copy_btn, 0, wx.RIGHT, 6)
-        self.save_btn = wx.Button(panel, label="Save .kicad_sym", size=(120,28))
+        self.save_btn = wx.Button(panel, label=T("save_sym"), size=(120,28))
         self.save_btn.Bind(wx.EVT_BUTTON, self._on_save_sym)
         top_bar.Add(self.save_btn, 0, wx.RIGHT, 6)
-        self.export_btn = wx.Button(panel, label="Export JSON", size=(100,28))
+        self.export_btn = wx.Button(panel, label=T("export_json"), size=(100,28))
         self.export_btn.Bind(wx.EVT_BUTTON, self._on_export_json)
         top_bar.Add(self.export_btn, 0)
         top_bar.AddStretchSpacer(1)
@@ -219,13 +220,13 @@ class SchAiAssistantDialog(wx.Dialog):
         input_row.Add(self.thumb, 0, wx.RIGHT, 8)
         input_inner = wx.BoxSizer(wx.VERTICAL)
         btn_row = wx.BoxSizer(wx.HORIZONTAL)
-        p_btn = wx.Button(self.chat_panel, label="Paste", size=(70,24))
+        p_btn = wx.Button(self.chat_panel, label=T("paste"), size=(70,24))
         p_btn.Bind(wx.EVT_BUTTON, self._on_paste)
         btn_row.Add(p_btn, 0, wx.RIGHT, 4)
-        f_btn = wx.Button(self.chat_panel, label="File", size=(60,24))
+        f_btn = wx.Button(self.chat_panel, label=T("file"), size=(60,24))
         f_btn.Bind(wx.EVT_BUTTON, self._on_load_file)
         btn_row.Add(f_btn, 0, wx.RIGHT, 4)
-        r_btn = wx.Button(self.chat_panel, label="识别符号", size=(80,24))
+        r_btn = wx.Button(self.chat_panel, label=T("symbol_recog"), size=(80,24))
         r_btn.SetToolTip("Analyze image and extract pins to table")
         r_btn.SetBackgroundColour(wx.Colour(255, 215, 0))  # gold
         r_btn.Bind(wx.EVT_BUTTON, self._on_analyze)
@@ -235,7 +236,7 @@ class SchAiAssistantDialog(wx.Dialog):
         self.prompt_text = wx.TextCtrl(self.chat_panel, value="", style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER, size=(-1, 60))
         self.prompt_text.Bind(wx.EVT_TEXT_ENTER, self._on_chat)
         prompt_row.Add(self.prompt_text, 1, wx.EXPAND)
-        self.send_btn = wx.Button(self.chat_panel, label="Send", size=(60,60))
+        self.send_btn = wx.Button(self.chat_panel, label=T("send"), size=(60,60))
         self.send_btn.Bind(wx.EVT_BUTTON, self._on_chat)
         prompt_row.Add(self.send_btn, 0, wx.EXPAND|wx.LEFT, 4)
         input_inner.Add(prompt_row, 1, wx.EXPAND)
@@ -247,7 +248,7 @@ class SchAiAssistantDialog(wx.Dialog):
         right_panel = wx.Panel(self.splitter)
         right_panel.SetMinSize(wx.Size(220,0))
         rs = wx.BoxSizer(wx.VERTICAL)
-        lbl = wx.StaticText(right_panel, label="Extracted Pins:")
+        lbl = wx.StaticText(right_panel, label=T("extracted_pins") + ":")
         rs.Add(lbl, 0, wx.BOTTOM, 4)
         self.pin_grid = PinTableGrid(right_panel)
         rs.Add(self.pin_grid, 1, wx.EXPAND)
@@ -272,7 +273,7 @@ class SchAiAssistantDialog(wx.Dialog):
         panel.SetDropTarget(DropTarget(self._load_file))
 
     def _create_settings_dlg(self):
-        self.settings_dlg = wx.Dialog(self, title="Settings",
+        self.settings_dlg = wx.Dialog(self, title=T("settings_title"),
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.settings_dlg.SetSize((420,550))
         pan = wx.Panel(self.settings_dlg); sz = wx.BoxSizer(wx.VERTICAL)
@@ -289,7 +290,7 @@ class SchAiAssistantDialog(wx.Dialog):
         a_sz.Add(wx.StaticText(a_sz.GetStaticBox(), label="Endpoint:"), 0, wx.LEFT, 4)
         self.endpoint_ctrl = wx.TextCtrl(a_sz.GetStaticBox(), value="https://apihub.agnes-ai.com/v1/chat/completions")
         a_sz.Add(self.endpoint_ctrl, 0, wx.EXPAND|wx.ALL, 4)
-        save_api = wx.Button(a_sz.GetStaticBox(), label="Save Key")
+        save_api = wx.Button(a_sz.GetStaticBox(), label=T("save_key"))
         save_api.Bind(wx.EVT_BUTTON, self._on_save_api)
         a_sz.Add(save_api, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, 4)
         sz.Add(a_sz, 0, wx.EXPAND|wx.ALL|wx.BOTTOM, 8)
@@ -302,10 +303,10 @@ class SchAiAssistantDialog(wx.Dialog):
         s_sz.Add(wx.StaticText(s_sz.GetStaticBox(), label="Ref Prefix:"), 0, wx.LEFT, 4)
         self.ref_prefix_ctrl = wx.TextCtrl(s_sz.GetStaticBox(), value="U")
         s_sz.Add(self.ref_prefix_ctrl, 0, wx.EXPAND|wx.ALL, 4)
-        s_sz.Add(wx.StaticText(s_sz.GetStaticBox(), label="Pin Length(mm):"), 0, wx.LEFT, 4)
+        s_sz.Add(wx.StaticText(s_sz.GetStaticBox(), label="Pin Length (mm):"), 0, wx.LEFT, 4)
         self.pin_len_ctrl = wx.SpinCtrlDouble(s_sz.GetStaticBox(), value="2.54", min=1.0, max=20, inc=0.5)
         self.pin_len_ctrl.SetDigits(2); s_sz.Add(self.pin_len_ctrl, 0, wx.EXPAND|wx.ALL, 4)
-        s_sz.Add(wx.StaticText(s_sz.GetStaticBox(), label="Pin Spacing(mm):"), 0, wx.LEFT, 4)
+        s_sz.Add(wx.StaticText(s_sz.GetStaticBox(), label="Pin Spacing (mm):"), 0, wx.LEFT, 4)
         self.pin_spacing_ctrl = wx.SpinCtrlDouble(s_sz.GetStaticBox(), value="2.54", min=1.0, max=20, inc=0.5)
         self.pin_spacing_ctrl.SetDigits(2); s_sz.Add(self.pin_spacing_ctrl, 0, wx.EXPAND|wx.ALL, 4)
         self.show_numbers_cb = wx.CheckBox(s_sz.GetStaticBox(), label="Show Pin Numbers")
@@ -358,11 +359,11 @@ class SchAiAssistantDialog(wx.Dialog):
         if success:
             self.thumb.set_image(self._last_image_bytes)
             self.thumb.Show(); self.chat_panel.Layout()
-            self._add_msg("system", "Image pasted. Click Send to analyze.")
+            self._add_msg("system", T("image_pasted"))
             _log("[PASTE] success, thumbnail shown")
         else:
             _log("[PASTE] failed - no image on clipboard")
-            wx.MessageBox("No image found on clipboard.", "Paste", wx.ICON_INFORMATION)
+            wx.MessageBox(T("no_clipboard"), "Paste", wx.ICON_INFORMATION)
 
     def _load_file(self, path):
         """Load image from path into thumbnail (used by File button and drag-drop)."""
@@ -377,10 +378,10 @@ class SchAiAssistantDialog(wx.Dialog):
                 self._last_image_bytes = png_bytes
                 self.thumb.set_image(png_bytes)
                 self.thumb.Show(); self.chat_panel.Layout()
-                self._add_msg("system", f"Image loaded: {os.path.basename(path)}.")
+                self._add_msg("system", T("image_loaded", path=os.path.basename(path)))
                 _log("[FILE] success")
             else:
-                wx.MessageBox("Unsupported image format.", "Error", wx.ICON_ERROR)
+                wx.MessageBox(T("unsupported_format"), "Error", wx.ICON_ERROR)
         except Exception as e:
             _log(f"[FILE] exception: {e}")
             wx.MessageBox(str(e), "Error", wx.ICON_ERROR)
@@ -415,10 +416,10 @@ class SchAiAssistantDialog(wx.Dialog):
             image_bytes = self._last_image_bytes
         self._last_image_bytes = None
         if not image_bytes:
-            wx.MessageBox("No image loaded. Please load an image first (Paste or File).", "No Image", wx.ICON_WARNING)
+            wx.MessageBox(T("no_image"), "No Image", wx.ICON_WARNING)
             return
         _log(f"[ANALYZE] image_bytes={len(image_bytes)}")
-        self._add_msg("system", "Analyzing image...")
+        self._add_msg("system", T("analyzing"))
         import threading
         threading.Thread(target=self._do_analysis, args=(image_bytes,), daemon=True).start()
 
@@ -441,7 +442,7 @@ class SchAiAssistantDialog(wx.Dialog):
                 si = ", ".join(f"{v} {k}" for k, v in sorted(sides.items()))
                 wx.CallAfter(lambda: self._on_analysis_result(pins, si))
             else:
-                wx.CallAfter(lambda: wx.MessageBox("No pins detected.", "No Pins", wx.ICON_WARNING))
+                wx.CallAfter(lambda: wx.MessageBox(T("no_pins"), "No Pins", wx.ICON_WARNING))
         except Exception as e:
             import traceback
             _log(f"[ANALYZE] EXCEPTION: {e}\n{traceback.format_exc()}")
@@ -455,13 +456,13 @@ class SchAiAssistantDialog(wx.Dialog):
         self.pin_grid.set_pins(pins)
         self._add_msg("ai", f"Found {len(pins)} pins: {si}")
         self.thumb.clear(); self.thumb.Hide(); self.chat_panel.Layout()
-        wx.MessageBox(f"Success: {len(pins)} pins.\n{si}", "Done", wx.ICON_INFORMATION)
+        wx.MessageBox(T("success_pins", n=len(pins), s=si), "Done", wx.ICON_INFORMATION)
 
     def _do_chat(self, prompt):
         """Background thread: API call, GUI updates via wx.CallAfter."""
         _log(f"[CHAT] prompt='{prompt[:30]}'")
         if not self.api_key:
-            wx.CallAfter(lambda: (self._remove_last_msg(), self._add_msg("ai", "Please configure API key in Settings first.")))
+            wx.CallAfter(lambda: (self._remove_last_msg(), self._add_msg("ai", T("no_api_key"))))
             return
         try:
             import requests
@@ -523,7 +524,7 @@ class SchAiAssistantDialog(wx.Dialog):
 
     def _on_copy_editor(self, event):
         pins = self.pin_grid.get_pins()
-        if not pins: wx.MessageBox("No pins.", "Error", wx.ICON_ERROR); return
+        if not pins: wx.MessageBox(T("no_pins_grid"), "Error", wx.ICON_ERROR); return
         try:
             from sch_ai_assistant import generate_symbol_items
             sn = self.sym_name_ctrl.GetValue().strip() or "NEW_CHIP"
@@ -531,12 +532,12 @@ class SchAiAssistantDialog(wx.Dialog):
             txt = generate_symbol_items(sn, ref, pins, self.pin_len_ctrl.GetValue(), self.pin_spacing_ctrl.GetValue())
             if wx.TheClipboard.Open():
                 wx.TheClipboard.SetData(wx.TextDataObject(txt)); wx.TheClipboard.Close()
-            self._add_msg("system", f"Copied {len(pins)} pins. Switch to KiCad Symbol Editor -> Ctrl+V.")
+            self._add_msg("system", T("copied", n=len(pins)))
         except Exception as e: wx.MessageBox(str(e), "Error", wx.ICON_ERROR)
 
     def _on_save_sym(self, event):
         pins = self.pin_grid.get_pins()
-        if not pins: wx.MessageBox("No pins.", "Error", wx.ICON_ERROR); return
+        if not pins: wx.MessageBox(T("no_pins_grid"), "Error", wx.ICON_ERROR); return
         try:
             from sch_ai_assistant import generate_kicad_symbol
             sn = self.sym_name_ctrl.GetValue().strip() or "NEW_CHIP"
@@ -547,19 +548,19 @@ class SchAiAssistantDialog(wx.Dialog):
                                style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT) as dlg:
                 if dlg.ShowModal() == wx.ID_OK:
                     with open(dlg.GetPath(), "w", encoding="utf-8") as f: f.write(txt)
-                    self._add_msg("system", f"Saved: {dlg.GetPath()}")
+                    self._add_msg("system", T("saved", path=dlg.GetPath()))
         except Exception as e: wx.MessageBox(str(e), "Error", wx.ICON_ERROR)
 
     def _on_export_json(self, event):
         pins = self.pin_grid.get_pins()
-        if not pins: wx.MessageBox("No pins.", "Error", wx.ICON_ERROR); return
+        if not pins: wx.MessageBox(T("no_pins_grid"), "Error", wx.ICON_ERROR); return
         data = [{"number":p.number,"name":p.name,"type":p.etype,"shape":p.shape,"side":p.side} for p in pins]
         with wx.FileDialog(self, "Export", defaultFile="pins.json",
                            wildcard="JSON (*.json)|*.json",
                            style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT) as dlg:
             if dlg.ShowModal() == wx.ID_OK:
                 with open(dlg.GetPath(), "w", encoding="utf-8") as f: json.dump(data, f, indent=2)
-                self._add_msg("system", f"Exported: {dlg.GetPath()}")
+                self._add_msg("system", T("exported", path=dlg.GetPath()))
 
     def _load_api_key(self):
         try:
