@@ -29,14 +29,14 @@ SHAPE_CHOICES = ["line","inverted","clock","inverted_clock",
     "input_low","clock_low","output_low","non_logic"]
 SIDE_CHOICES = ["left","right","top","bottom"]
 
-class ThumbnailButton(wx.Panel):
+class ThumbnailButton(wx.BitmapButton):
     def __init__(self, parent, size=(100,80)):
-        super().__init__(parent, size=size, style=wx.BORDER_SIMPLE)
-        self._png = b""; self._bmp = None
+        empty = wx.Bitmap(size[0], size[1])
+        super().__init__(parent, bitmap=empty, size=size)
+        self._png = b""
         self.SetMinSize(size)
-        self.SetBackgroundColour(wx.Colour(230,230,230))
-        self.Bind(wx.EVT_PAINT, self._on_paint)
-        self.Bind(wx.EVT_LEFT_DOWN, self._on_click)
+        self.SetToolTip("Click to enlarge")
+        self.Bind(wx.EVT_BUTTON, self._on_click)
 
     def set_image(self, png_bytes):
         self._png = png_bytes
@@ -46,25 +46,23 @@ class ThumbnailButton(wx.Panel):
                 if img.IsOk():
                     w, h = self.GetSize()
                     iw, ih = img.GetWidth(), img.GetHeight()
-                    scale = min(w/iw, h/ih)
-                    self._bmp = wx.Bitmap(img.Scale(int(iw*scale), int(ih*scale)))
-                    self.SetToolTip("Click to enlarge"); self.Refresh(); return
+                    scale = min(w/iw, h/ih, 1.0)
+                    bmp = wx.Bitmap(img.Scale(int(iw*scale), int(ih*scale)))
+                    self.SetBitmap(bmp)
+                    self.SetToolTip("Click to enlarge")
+                    return
             except Exception: pass
-        self._bmp = None; self.SetToolTip("No image"); self.Refresh()
+        empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
+        self.SetBitmap(empty)
+        self.SetToolTip("No image")
 
     def get_png(self): return self._png
 
     def clear(self):
-        self._png = b""; self._bmp = None; self.SetToolTip(""); self.Refresh()
-
-    def _on_paint(self, event):
-        dc = wx.PaintDC(self); w, h = self.GetSize()
-        if self._bmp and self._bmp.IsOk():
-            bw, bh = self._bmp.GetSize()
-            dc.DrawBitmap(self._bmp, (w-bw)//2, (h-bh)//2)
-        else:
-            dc.SetTextForeground(wx.Colour(150,150,150))
-            dc.DrawText("Image", (w-30)//2, (h-12)//2)
+        self._png = b""
+        empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
+        self.SetBitmap(empty)
+        self.SetToolTip("")
 
     def _on_click(self, event):
         if self._png and len(self._png) > 10:
