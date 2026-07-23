@@ -480,15 +480,13 @@ class SchAiAssistantDialog(wx.Dialog):
         line = f"{now} {prefix} {text}\n"
         if image_bytes and len(image_bytes) > 10:
             line += f"  [image, {len(image_bytes)} bytes]\n"
-        start = self.msg_window.GetLastPosition()
-        self.msg_window.AppendText(line)
-        end = self.msg_window.GetLastPosition()
-        # Apply colour
         try:
-            attr = wx.TextAttr(colour)
-            self.msg_window.SetStyle(start, end, attr)
+            old = self.msg_window.GetDefaultStyle()
+            self.msg_window.SetDefaultStyle(wx.TextAttr(colour))
+            self.msg_window.AppendText(line)
+            self.msg_window.SetDefaultStyle(old)
         except Exception:
-            pass  # plain text is fine if styled not supported
+            self.msg_window.AppendText(line)  # plain text is fine if styled not supported
         # Scroll to bottom
         self.msg_window.ShowPosition(end)
 
