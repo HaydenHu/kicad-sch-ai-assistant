@@ -488,7 +488,7 @@ class SchAiAssistantDialog(wx.Dialog):
         except Exception:
             self.msg_window.AppendText(line)  # plain text is fine if styled not supported
         # Scroll to bottom
-        self.msg_window.ShowPosition(end)
+        self.msg_window.ShowPosition(self.msg_window.GetLastPosition())
 
     def _remove_last_msg(self):
         """Remove last line from chat log."""
