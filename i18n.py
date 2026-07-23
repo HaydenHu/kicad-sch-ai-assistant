@@ -3,14 +3,14 @@ Multi-language support. Auto-detects system language, falls back to English.
 """
 
 import locale
-import sys
+import os
 
 
 def _detect_lang():
     """Detect UI language: zh for Chinese, en for others."""
     # 1. Check environment
     for env in ["LANG", "LC_ALL", "LANGUAGE", "KICAD_LANG"]:
-        v = sys.getenv(env, "")
+        v = os.environ.get(env, "")
         if v and "zh" in v.lower():
             return "zh"
     # 2. Windows: try GetUserDefaultUILanguage
