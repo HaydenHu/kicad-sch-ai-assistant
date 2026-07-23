@@ -378,7 +378,7 @@ class SchAiAssistantDialog(wx.Dialog):
                 self._last_image_bytes = png_bytes
                 self.thumb.set_image(png_bytes)
                 self.thumb.Show(); self.chat_panel.Layout()
-                self._add_msg("system", T("image_loaded", path=os.path.basename(path)))
+                self._add_msg("system", T("image_loaded", name=os.path.basename(path)))
                 _log("[FILE] success")
             else:
                 wx.MessageBox(T("unsupported_format"), "Error", wx.ICON_ERROR)

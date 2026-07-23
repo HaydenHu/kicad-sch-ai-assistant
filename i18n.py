@@ -73,7 +73,7 @@ STRINGS = {
         "analyzing": "正在分析图片...",
 
         "image_pasted": "已粘贴图片，点击识别符号开始分析。",
-        "image_loaded": "已加载图片: {}，点击识别符号。",
+        "image_loaded": "已加载图片: {name}，点击识别符号。",
 
         "no_image": "未加载图片。请先粘贴或打开一张引脚图。",
         "no_api_key": "API Key 未设置。请打开设置输入密钥。",
@@ -127,7 +127,7 @@ STRINGS = {
         "analyzing": "Analyzing image...",
 
         "image_pasted": "Image pasted. Click Recognize to analyze.",
-        "image_loaded": "Image loaded: {}. Click Recognize.",
+        "image_loaded": "Image loaded: {name}. Click Recognize.",
 
         "no_image": "No image loaded. Please paste or open a pin diagram first.",
         "no_api_key": "API key not set. Open Settings and enter your API key.",
