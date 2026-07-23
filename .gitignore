@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+debug.log
+settings.json
