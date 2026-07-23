@@ -466,16 +466,15 @@ class SchAiAssistantDialog(wx.Dialog):
     def _add_msg(self, role, text, image_bytes=None):
         msg = ChatMessagePanel(self.msg_inner, role, text, image_bytes)
         self.msg_sizer.Add(msg, 0, wx.EXPAND|wx.BOTTOM, 8)
-        # Estimate height: 30 header + lines*18 + 70 for image + 10 margin
+        # Estimate height: cap at 800px per message
         lines = max(1, len(text) // 35 + text.count('\n') + 1)
-        h = 40 + lines * 18 + (70 if image_bytes else 0)
+        h = min(40 + lines * 18 + (70 if image_bytes else 0), 800)
         self._msg_total_h += h
         self.msg_inner.SetSize((400, self._msg_total_h))
         self.msg_inner.Layout()
-        self.msg_window.SetScrollbars(0, 16, 500, self._msg_total_h // 16)
+        self.msg_window.SetScrollbars(0, 16, 500, max(1, self._msg_total_h // 16))
         self.msg_inner.Refresh()
         self.msg_window.Refresh()
-        self.msg_window.Scroll(0, self._msg_total_h)
 
     def _remove_last_msg(self):
         cnt = self.msg_sizer.GetItemCount()
