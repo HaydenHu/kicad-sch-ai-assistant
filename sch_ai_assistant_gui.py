@@ -479,8 +479,7 @@ class SchAiAssistantDialog(wx.Dialog):
         self._msg_total_h += h
         self.msg_inner.SetSize((400, self._msg_total_h))
         self.msg_inner.Layout()
-        self.msg_window.SetScrollbars(0, 16, 500, max(1, self._msg_total_h // 16))
-        self.msg_inner.Refresh()
+        self.msg_window.SetScrollbars(0, 1, 400, self._msg_total_h)
         self.msg_window.Refresh()
 
     def _remove_last_msg(self):
@@ -492,8 +491,7 @@ class SchAiAssistantDialog(wx.Dialog):
                 self._msg_total_h = max(80, self._msg_total_h - 90)
                 self.msg_inner.SetSize((400, self._msg_total_h))
                 self.msg_inner.Layout()
-                self.msg_window.SetScrollbars(0, 16, 500, self._msg_total_h // 16)
-                self.msg_inner.Refresh()
+                self.msg_window.SetScrollbars(0, 1, 400, self._msg_total_h)
                 self.msg_window.Refresh()
 
     def _on_copy_editor(self, event):
