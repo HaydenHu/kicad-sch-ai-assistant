@@ -8,14 +8,32 @@ import sys
 
 def _detect_lang():
     """Detect UI language: zh for Chinese, en for others."""
-    try:
-        # Check environment variable first
-        lang = sys.getenv("LANG", "") or sys.getenv("LC_ALL", "") or sys.getenv("LANGUAGE", "")
-        if "zh" in lang.lower():
+    # 1. Check environment
+    for env in ["LANG", "LC_ALL", "LANGUAGE", "KICAD_LANG"]:
+        v = sys.getenv(env, "")
+        if v and "zh" in v.lower():
             return "zh"
-        # Check system locale
+    # 2. Windows: try GetUserDefaultUILanguage
+    try:
+        import ctypes
+        lang_id = ctypes.windll.kernel32.GetUserDefaultUILanguage()
+        # Primary language ID: 0x04 = Chinese
+        if (lang_id & 0xFF) == 0x04:
+            return "zh"
+    except Exception:
+        pass
+    # 3. locale fallback
+    try:
         lc = locale.getdefaultlocale()
         if lc and lc[0] and "zh" in lc[0].lower():
+            return "zh"
+    except Exception:
+        pass
+    # 4. Check for common Chinese code pages
+    try:
+        import ctypes
+        acp = ctypes.windll.kernel32.GetACP()
+        if acp in (936, 54936, 950):  # GBK, GB18030, Big5
             return "zh"
     except Exception:
         pass
