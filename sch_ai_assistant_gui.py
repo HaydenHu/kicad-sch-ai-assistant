@@ -252,6 +252,14 @@ class SchAiAssistantDialog(wx.Dialog):
         self.SetAcceleratorTable(accel)
         self.Bind(wx.EVT_MENU, lambda e: self._on_paste(None), id=wx.ID_PASTE)
 
+        # Drag-and-drop support
+        class DropTarget(wx.FileDropTarget):
+            def __init__(self, cb):
+                super().__init__(); self.cb = cb
+            def OnDropFiles(self, x, y, files):
+                if files: self.cb(files[0]); return True
+        panel.SetDropTarget(DropTarget(self._load_file))
+
     def _create_settings_dlg(self):
         self.settings_dlg = wx.Dialog(self, title="Settings",
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
@@ -345,32 +353,34 @@ class SchAiAssistantDialog(wx.Dialog):
             _log("[PASTE] failed - no image on clipboard")
             wx.MessageBox("No image found on clipboard.", "Paste", wx.ICON_INFORMATION)
 
+    def _load_file(self, path):
+        """Load image from path into thumbnail (used by File button and drag-drop)."""
+        _log(f"[FILE] loading: {path}")
+        try:
+            img = wx.Image(path)
+            if img.IsOk():
+                stream = io.BytesIO()
+                img.SaveFile(stream, wx.BITMAP_TYPE_PNG)
+                png_bytes = stream.getvalue()
+                _log(f"[FILE] {len(png_bytes)} bytes PNG")
+                self._last_image_bytes = png_bytes
+                self.thumb.set_image(png_bytes)
+                self.thumb.Show(); self.chat_panel.Layout()
+                self._add_msg("system", f"Image loaded: {os.path.basename(path)}.")
+                _log("[FILE] success")
+            else:
+                wx.MessageBox("Unsupported image format.", "Error", wx.ICON_ERROR)
+        except Exception as e:
+            _log(f"[FILE] exception: {e}")
+            wx.MessageBox(str(e), "Error", wx.ICON_ERROR)
+
     def _on_load_file(self, event):
-        _log("[FILE] start")
+        _log("[FILE] open dialog")
         with wx.FileDialog(self, "Select Image",
                            wildcard="Images (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp",
                            style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
             if dlg.ShowModal() == wx.ID_OK:
-                path = dlg.GetPath()
-                _log(f"[FILE] selected: {path}")
-                try:
-                    img = wx.Image(path)
-                    if img.IsOk():
-                        stream = io.BytesIO()
-                        saved = img.SaveFile(stream, wx.BITMAP_TYPE_PNG)
-                        png_bytes = stream.getvalue()
-                        _log(f"[FILE] SaveFile={saved}, {len(png_bytes)} bytes PNG")
-                        self._last_image_bytes = png_bytes
-                        self.thumb.set_image(png_bytes)
-                        self.thumb.Show(); self.chat_panel.Layout()
-                        self._add_msg("system", f"Image loaded: {os.path.basename(path)}. Click Send.")
-                        _log("[FILE] success")
-                    else:
-                        _log("[FILE] wx.Image not OK")
-                        wx.MessageBox("Unsupported image format.", "Error", wx.ICON_ERROR)
-                except Exception as e:
-                    _log(f"[FILE] exception: {e}")
-                    wx.MessageBox(str(e), "Error", wx.ICON_ERROR)
+                self._load_file(dlg.GetPath())
 
     def _on_chat(self, event):
         """Send text-only message to AI chat (runs API in background thread)."""
