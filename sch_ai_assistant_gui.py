@@ -177,6 +177,7 @@ class SchAiAssistantDialog(wx.Dialog):
         self.settings_toggle.Bind(wx.EVT_BUTTON, self._on_settings)
         top_bar.Add(self.settings_toggle, 0, wx.RIGHT, 6)
         self.copy_btn = wx.Button(panel, label="Copy for Editor", size=(150,28))
+        self.copy_btn.SetBackgroundColour(wx.Colour(39, 174, 96))  # green
         self.copy_btn.Bind(wx.EVT_BUTTON, self._on_copy_editor)
         top_bar.Add(self.copy_btn, 0, wx.RIGHT, 6)
         self.save_btn = wx.Button(panel, label="Save .kicad_sym", size=(120,28))
@@ -220,6 +221,7 @@ class SchAiAssistantDialog(wx.Dialog):
         btn_row.Add(f_btn, 0, wx.RIGHT, 4)
         r_btn = wx.Button(self.chat_panel, label="识别符号", size=(80,24))
         r_btn.SetToolTip("Analyze image and extract pins to table")
+        r_btn.SetBackgroundColour(wx.Colour(255, 215, 0))  # gold
         r_btn.Bind(wx.EVT_BUTTON, self._on_analyze)
         btn_row.Add(r_btn, 0)
         input_inner.Add(btn_row, 0, wx.BOTTOM, 2)
@@ -227,9 +229,9 @@ class SchAiAssistantDialog(wx.Dialog):
         self.prompt_text = wx.TextCtrl(self.chat_panel, value="", style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER, size=(-1, 60))
         self.prompt_text.Bind(wx.EVT_TEXT_ENTER, self._on_chat)
         prompt_row.Add(self.prompt_text, 1, wx.EXPAND)
-        self.send_btn = wx.Button(self.chat_panel, label="Send", size=(60,24))
+        self.send_btn = wx.Button(self.chat_panel, label="Send", size=(60,60))
         self.send_btn.Bind(wx.EVT_BUTTON, self._on_chat)
-        prompt_row.Add(self.send_btn, 0, wx.LEFT, 4)
+        prompt_row.Add(self.send_btn, 0, wx.EXPAND|wx.LEFT, 4)
         input_inner.Add(prompt_row, 1, wx.EXPAND)
         input_row.Add(input_inner, 1, wx.EXPAND)
         chat_sizer.Add(input_row, 0, wx.EXPAND|wx.ALL, 4)
