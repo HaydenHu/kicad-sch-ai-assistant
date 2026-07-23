@@ -199,7 +199,10 @@ class SchAiAssistantDialog(wx.Dialog):
         self.msg_window = wx.ScrolledWindow(self.chat_panel, style=wx.VSCROLL)
         self.msg_window.SetMinSize((300,100))
         self.msg_inner = wx.Panel(self.msg_window)
-        self.msg_inner.SetBackgroundColour(wx.WHITE)
+        self.msg_inner.SetBackgroundColour(wx.Colour(250,250,250))
+        # Refresh inner panel on scroll to fix content clipping
+        try: self.msg_window.Bind(wx.EVT_SCROLLWIN, lambda e: (e.Skip(), self.msg_inner.Refresh()))
+        except Exception: pass
         self.msg_inner.SetSize((450, 200))
         self.msg_sizer = wx.BoxSizer(wx.VERTICAL)
         self.msg_inner.SetSizer(self.msg_sizer)
