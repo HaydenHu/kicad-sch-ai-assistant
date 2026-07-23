@@ -381,7 +381,7 @@ class SchAiAssistantDialog(wx.Dialog):
                     wx.MessageBox(str(e), "Error", wx.ICON_ERROR)
 
     def _on_chat(self, event):
-        """Send text-only message to AI chat."""
+        """Send text-only message to AI chat (runs API in background thread)."""
         prompt = self.prompt_text.GetValue().strip()
         self.prompt_text.Clear()
         if not prompt:
@@ -389,11 +389,11 @@ class SchAiAssistantDialog(wx.Dialog):
         _log(f"[CHAT] prompt='{prompt[:30]}'")
         self._add_msg("user", prompt)
         self._add_msg("system", "Thinking...")
-        wx.Yield()
-        self._do_chat(prompt)
+        import threading
+        threading.Thread(target=self._do_chat, args=(prompt,), daemon=True).start()
 
     def _on_analyze(self, event):
-        """Analyze loaded image and extract pins to table."""
+        """Analyze loaded image and extract pins to table (runs API in background thread)."""
         image_bytes = None
         thumb_png = self.thumb.get_png()
         if thumb_png and len(thumb_png) > 10:
@@ -406,46 +406,51 @@ class SchAiAssistantDialog(wx.Dialog):
             return
         _log(f"[ANALYZE] image_bytes={len(image_bytes)}")
         self._add_msg("system", "Analyzing image...")
-        wx.Yield()
-        self._do_analysis(image_bytes)
+        import threading
+        threading.Thread(target=self._do_analysis, args=(image_bytes,), daemon=True).start()
 
     def _do_analysis(self, image_bytes):
-        """Image pin extraction only."""
+        """Background thread: API call, GUI updates via wx.CallAfter."""
         _log(f"[ANALYZE] image_bytes={len(image_bytes)}, api_key={'SET' if self.api_key else 'EMPTY'}")
+        if not self.api_key:
+            wx.CallAfter(lambda: wx.MessageBox("API key not set.", "No API Key", wx.ICON_WARNING))
+            wx.CallAfter(self._remove_last_msg); return
         try:
-            if not self.api_key:
-                wx.MessageBox("API key not set. Open Settings.", "No API Key", wx.ICON_WARNING)
-                self._remove_last_msg(); return
             from sch_ai_assistant import analyze_pin_diagram
             endpoint = self.endpoint_ctrl.GetValue().strip() or "https://apihub.agnes-ai.com/v1/chat/completions"
             model = self.model_choice.GetStringSelection() or "agnes-2.0-flash"
             b64 = base64.b64encode(image_bytes).decode("utf-8")
             pins = analyze_pin_diagram(self.api_key, model, endpoint, b64)
             _log(f"[ANALYZE] got {len(pins) if pins else 0} pins")
-            self._remove_last_msg()
             if pins and len(pins) > 0:
-                self.pin_grid.set_pins(pins)
                 sides = {}; si = ""
                 for p in pins: sides[p.side] = sides.get(p.side, 0) + 1
                 si = ", ".join(f"{v} {k}" for k, v in sorted(sides.items()))
-                self._add_msg("ai", f"Found {len(pins)} pins: {si}")
-                self.thumb.clear(); self.thumb.Hide(); self.chat_panel.Layout()
-                wx.MessageBox(f"Success: {len(pins)} pins.\n{si}", "Done", wx.ICON_INFORMATION)
+                wx.CallAfter(lambda: self._on_analysis_result(pins, si))
             else:
-                wx.MessageBox("No pins detected.", "No Pins", wx.ICON_WARNING)
+                wx.CallAfter(lambda: wx.MessageBox("No pins detected.", "No Pins", wx.ICON_WARNING))
         except Exception as e:
             import traceback
-            try: self._remove_last_msg()
-            except Exception: pass
             _log(f"[ANALYZE] EXCEPTION: {e}\n{traceback.format_exc()}")
-            wx.MessageBox(f"Analysis failed:\n{e}", "Error", wx.ICON_ERROR)
+            def show_err(): self._remove_last_msg(); wx.MessageBox(f"Analysis failed:\n{e}", "Error", wx.ICON_ERROR)
+            wx.CallAfter(show_err)
+
+    def _on_analysis_result(self, pins, si):
+        """Called on main thread after successful pin extraction."""
+        try: self._remove_last_msg()
+        except Exception: pass
+        self.pin_grid.set_pins(pins)
+        self._add_msg("ai", f"Found {len(pins)} pins: {si}")
+        self.thumb.clear(); self.thumb.Hide(); self.chat_panel.Layout()
+        wx.MessageBox(f"Success: {len(pins)} pins.\n{si}", "Done", wx.ICON_INFORMATION)
 
     def _do_chat(self, prompt):
-        """Text-only AI chat."""
+        """Background thread: API call, GUI updates via wx.CallAfter."""
         _log(f"[CHAT] prompt='{prompt[:30]}'")
+        if not self.api_key:
+            wx.CallAfter(lambda: (self._remove_last_msg(), self._add_msg("ai", "Please configure API key in Settings first.")))
+            return
         try:
-            if not self.api_key:
-                self._remove_last_msg(); self._add_msg("ai", "Please configure API key in Settings first."); return
             import requests
             endpoint = self.endpoint_ctrl.GetValue().strip() or "https://apihub.agnes-ai.com/v1/chat/completions"
             model = self.model_choice.GetStringSelection() or "agnes-2.0-flash"
@@ -455,13 +460,12 @@ class SchAiAssistantDialog(wx.Dialog):
             resp.raise_for_status()
             content = resp.json()["choices"][0]["message"]["content"]
             _log(f"[CHAT] reply len={len(content)}")
-            self._remove_last_msg()
-            self._add_msg("ai", content)
+            wx.CallAfter(self._remove_last_msg)
+            wx.CallAfter(lambda: self._add_msg("ai", content))
         except Exception as e:
             import traceback
-            self._remove_last_msg()
             _log(f"[CHAT] EXCEPTION: {e}\n{traceback.format_exc()}")
-            self._add_msg("ai", f"Error: {e}")
+            wx.CallAfter(lambda: (self._remove_last_msg(), self._add_msg("ai", f"Error: {e}")))
 
     def _add_msg(self, role, text, image_bytes=None):
         msg = ChatMessagePanel(self.msg_inner, role, text, image_bytes)
