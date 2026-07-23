@@ -196,7 +196,7 @@ class SchAiAssistantDialog(wx.Dialog):
         self.chat_panel = wx.Panel(self.splitter)
         chat_sizer = wx.BoxSizer(wx.VERTICAL)
         # Chat log (text-based, scrolling works natively)
-        self.msg_window = wx.TextCtrl(self.chat_panel, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH2|wx.HSCROLL)
+        self.msg_window = wx.TextCtrl(self.chat_panel, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH|wx.HSCROLL)
         self.msg_window.SetMinSize((300,100))
         self.msg_window.SetBackgroundColour(wx.Colour(250,250,250))
         self.msg_window.AppendText("*** Welcome! Paste a datasheet pin diagram, then click Send. ***\n")
@@ -470,15 +470,27 @@ class SchAiAssistantDialog(wx.Dialog):
             wx.CallAfter(lambda: (self._remove_last_msg(), self._add_msg("ai", f"Error: {e}")))
 
     def _add_msg(self, role, text, image_bytes=None):
-        """Append text to chat log."""
+        """Append colored text to chat log."""
+        colours = {"user": wx.Colour(0, 100, 200),
+                    "ai": wx.Colour(0, 120, 0),
+                    "system": wx.Colour(160, 120, 0)}
+        colour = colours.get(role, wx.BLACK)
         prefix = {"user": "[You]", "ai": "[AI]", "system": "[*]"}.get(role, "[ ]")
         now = datetime.now().strftime("%H:%M")
         line = f"{now} {prefix} {text}\n"
         if image_bytes and len(image_bytes) > 10:
-            line += f"  [image attached, {len(image_bytes)} bytes]\n"
+            line += f"  [image, {len(image_bytes)} bytes]\n"
+        start = self.msg_window.GetLastPosition()
         self.msg_window.AppendText(line)
+        end = self.msg_window.GetLastPosition()
+        # Apply colour
+        try:
+            attr = wx.TextAttr(colour)
+            self.msg_window.SetStyle(start, end, attr)
+        except Exception:
+            pass  # plain text is fine if styled not supported
         # Scroll to bottom
-        self.msg_window.ShowPosition(self.msg_window.GetLastPosition())
+        self.msg_window.ShowPosition(end)
 
     def _remove_last_msg(self):
         """Remove last line from chat log."""
