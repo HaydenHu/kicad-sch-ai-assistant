@@ -196,7 +196,7 @@ class SchAiAssistantDialog(wx.Dialog):
         self.chat_panel = wx.Panel(self.splitter)
         chat_sizer = wx.BoxSizer(wx.VERTICAL)
         # Chat log (text-based, scrolling works natively)
-        self.msg_window = wx.TextCtrl(self.chat_panel, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH|wx.HSCROLL)
+        self.msg_window = wx.TextCtrl(self.chat_panel, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL)
         self.msg_window.SetMinSize((300,100))
         self.msg_window.SetBackgroundColour(wx.Colour(250,250,250))
         self.msg_window.AppendText("*** Welcome! Paste a datasheet pin diagram, then click Send. ***\n")
@@ -470,24 +470,14 @@ class SchAiAssistantDialog(wx.Dialog):
             wx.CallAfter(lambda: (self._remove_last_msg(), self._add_msg("ai", f"Error: {e}")))
 
     def _add_msg(self, role, text, image_bytes=None):
-        """Append colored text to chat log."""
-        colours = {"user": wx.Colour(0, 100, 200),
-                    "ai": wx.Colour(0, 120, 0),
-                    "system": wx.Colour(160, 120, 0)}
-        colour = colours.get(role, wx.BLACK)
-        prefix = {"user": "[You]", "ai": "[AI]", "system": "[*]"}.get(role, "[ ]")
+        """Append text to chat log with role prefix."""
+        marker = {"user": ">>", "ai": "<<", "system": "--"}.get(role, "--")
         now = datetime.now().strftime("%H:%M")
-        line = f"{now} {prefix} {text}\n"
+        line = f"\n{now} {marker} {text}"
         if image_bytes and len(image_bytes) > 10:
-            line += f"  [image, {len(image_bytes)} bytes]\n"
-        try:
-            old = self.msg_window.GetDefaultStyle()
-            self.msg_window.SetDefaultStyle(wx.TextAttr(colour))
-            self.msg_window.AppendText(line)
-            self.msg_window.SetDefaultStyle(old)
-        except Exception:
-            self.msg_window.AppendText(line)  # plain text is fine if styled not supported
-        # Scroll to bottom
+            line += f"\n[image, {len(image_bytes)} bytes]"
+        line += "\n"
+        self.msg_window.AppendText(line)
         self.msg_window.ShowPosition(self.msg_window.GetLastPosition())
 
     def _remove_last_msg(self):
