@@ -68,13 +68,17 @@ class ThumbnailButton(wx.Window):
 
     def _on_click(self, event):
         if self._png and len(self._png) > 10:
-            dlg = wx.Dialog(self, title="Preview", style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-            dlg.SetSize((600,480))
+            dlg = wx.Dialog(self, title="Image Preview", style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+            dlg.SetSize((800, 600))
+            dlg.CentreOnParent()
             p = wx.Panel(dlg); s = wx.BoxSizer(wx.VERTICAL)
             img = wx.Image(io.BytesIO(self._png))
-            sc = min(580/img.GetWidth(), 440/img.GetHeight(), 1.0)
-            bmp = wx.Bitmap(img.Scale(int(img.GetWidth()*sc), int(img.GetHeight()*sc)))
+            dw, dh = dlg.GetClientSize()
+            sc = min((dw-20)/img.GetWidth(), (dh-40)/img.GetHeight(), 1.0)
+            nw, nh = int(img.GetWidth()*sc), int(img.GetHeight()*sc)
+            bmp = wx.Bitmap(img.Scale(nw, nh, wx.IMAGE_QUALITY_HIGH))
             sb = wx.StaticBitmap(p, bitmap=bmp)
+            sb.SetToolTip("Click image or press Escape to close")
             s.Add(sb, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER, 10)
             sb.Bind(wx.EVT_LEFT_DOWN, lambda e: dlg.EndModal(0))
             dlg.Bind(wx.EVT_KEY_DOWN, lambda e: dlg.EndModal(0) if e.GetKeyCode()==wx.WXK_ESCAPE else e.Skip())
