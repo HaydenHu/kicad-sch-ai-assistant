@@ -455,7 +455,6 @@ class SchAiAssistantDialog(wx.Dialog):
         except Exception: pass
         self.pin_grid.set_pins(pins)
         self._add_msg("ai", f"Found {len(pins)} pins: {si}")
-        self.thumb.clear(); self.thumb.Hide(); self.chat_panel.Layout()
         wx.MessageBox(T("success_pins", n=len(pins), s=si), "Done", wx.ICON_INFORMATION)
 
     def _do_chat(self, prompt):
