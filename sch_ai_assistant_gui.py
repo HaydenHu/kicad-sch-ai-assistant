@@ -195,11 +195,14 @@ class SchAiAssistantDialog(wx.Dialog):
         # Left: Chat
         self.chat_panel = wx.Panel(self.splitter)
         chat_sizer = wx.BoxSizer(wx.VERTICAL)
-        # Chat log (text-based, scrolling works natively)
-        self.msg_window = wx.TextCtrl(self.chat_panel, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL)
+        # Chat log (text-based, colored, scrolling works natively)
+        self.msg_window = wx.TextCtrl(self.chat_panel, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH|wx.HSCROLL)
         self.msg_window.SetMinSize((300,100))
         self.msg_window.SetBackgroundColour(wx.Colour(250,250,250))
+        self._msg_ranges = []  # list of (start, end, role) for recoloring
+        start = self.msg_window.GetLastPosition()
         self.msg_window.AppendText("*** Welcome! Paste a datasheet pin diagram, then click Send. ***\n")
+        self._msg_ranges.append((start, self.msg_window.GetLastPosition(), "system"))
         chat_sizer.Add(self.msg_window, 1, wx.EXPAND|wx.ALL, 4)
 
         # Input bar
@@ -470,22 +473,44 @@ class SchAiAssistantDialog(wx.Dialog):
             wx.CallAfter(lambda: (self._remove_last_msg(), self._add_msg("ai", f"Error: {e}")))
 
     def _add_msg(self, role, text, image_bytes=None):
-        """Append text to chat log with role prefix."""
+        """Append text and re-color ALL messages."""
         marker = {"user": ">>", "ai": "<<", "system": "--"}.get(role, "--")
         now = datetime.now().strftime("%H:%M")
         line = f"\n{now} {marker} {text}"
         if image_bytes and len(image_bytes) > 10:
             line += f"\n[image, {len(image_bytes)} bytes]"
         line += "\n"
+        start = self.msg_window.GetLastPosition()
         self.msg_window.AppendText(line)
-        self.msg_window.ShowPosition(self.msg_window.GetLastPosition())
+        end = self.msg_window.GetLastPosition()
+        self._msg_ranges.append((start, end, role))
+        # Re-color ALL messages
+        self._recolor_all()
+        self.msg_window.ShowPosition(end)
+
+    def _recolor_all(self):
+        """Apply colors to all stored message ranges."""
+        colours = {"user": wx.Colour(0, 80, 180),
+                   "ai": wx.Colour(0, 130, 0),
+                   "system": wx.Colour(180, 130, 0)}
+        try:
+            for s, e, role in self._msg_ranges:
+                attr = wx.TextAttr(colours.get(role, wx.BLACK))
+                self.msg_window.SetStyle(s, e, attr)
+        except Exception:
+            pass  # plain text is fine
 
     def _remove_last_msg(self):
-        """Remove last line from chat log."""
-        text = self.msg_window.GetValue()
-        idx = text.rstrip().rfind('\n')
-        if idx >= 0:
-            self.msg_window.SetValue(text[:idx+1])
+        """Remove last message from chat log and ranges."""
+        if self._msg_ranges:
+            self._msg_ranges.pop()
+            text = self.msg_window.GetValue()
+            idx = text.rstrip().rstrip('\n').rfind('\n')
+            if idx >= 0:
+                self.msg_window.SetValue(text[:idx+1])
+            else:
+                self.msg_window.SetValue("")
+            self._recolor_all()
             self.msg_window.ShowPosition(self.msg_window.GetLastPosition())
 
     def _on_copy_editor(self, event):
