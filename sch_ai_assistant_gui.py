@@ -80,7 +80,20 @@ class ThumbnailButton(wx.Panel):
             bmp = wx.Bitmap(img.Scale(nw, nh, wx.IMAGE_QUALITY_HIGH))
         except Exception:
             return
-        dlg = wx.Dialog(self.GetTopLevelParent(), title=T("preview_title"), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        # Reuse existing preview dialog if still open, otherwise create new
+        parent = self.GetTopLevelParent()
+        if hasattr(parent, '_preview_dlg') and parent._preview_dlg and not parent._preview_dlg.IsDestroyed():
+            old_dlg = parent._preview_dlg
+            old_mp = old_dlg.FindWindow(wx.ID_ANY) or old_dlg.GetChildren()[0]
+            if isinstance(old_mp, wx.Panel):
+                old_mp.GetSizer().Clear()
+                sb = wx.StaticBitmap(old_mp, bitmap=bmp)
+                old_mp.GetSizer().Add(sb, 1, wx.EXPAND|wx.ALL, 10)
+                old_mp.Layout()
+                old_dlg.Raise()
+                return
+        dlg = wx.Dialog(parent, title=T("preview_title"),
+                        style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         mp = wx.Panel(dlg)
         s = wx.BoxSizer(wx.VERTICAL)
         sb = wx.StaticBitmap(mp, bitmap=bmp)
@@ -88,10 +101,9 @@ class ThumbnailButton(wx.Panel):
         mp.SetSizer(s)
         dlg.SetClientSize((nw+20, nh+70))
         dlg.CentreOnParent()
-        # Modeless dialog - show() instead of ShowModal()
+        parent._preview_dlg = dlg  # track for reuse
         dlg.Show()
-        # Auto-cleanup when user closes it via X button
-        dlg.Bind(wx.EVT_CLOSE, lambda e: dlg.Destroy())
+        dlg.Bind(wx.EVT_CLOSE, lambda e: (parent.__setattr__('_preview_dlg', None), dlg.Destroy()))
 
 class ChatMessagePanel(wx.Panel):
     def __init__(self, parent, role, text, image_bytes=None):
