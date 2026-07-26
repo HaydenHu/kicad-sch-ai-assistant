@@ -91,8 +91,10 @@ class ThumbnailButton(wx.Panel):
         mp.SetSizer(s)
         dlg.SetClientSize((nw+20, nh+70))
         dlg.CentreOnParent()
-        dlg.ShowModal()
-        dlg.Destroy()
+        # Modeless dialog - show() instead of ShowModal()
+        dlg.Show()
+        # Auto-cleanup when user closes it via X button
+        dlg.Bind(wx.EVT_CLOSE, lambda e: dlg.Destroy())
 
 class ChatMessagePanel(wx.Panel):
     def __init__(self, parent, role, text, image_bytes=None):
