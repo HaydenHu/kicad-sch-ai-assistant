@@ -45,22 +45,39 @@ class ThumbnailButton(wx.Panel):
         preview_dlg = getattr(parent, '_preview_dlg', None)
         preview_sb = getattr(parent, '_preview_sb', None)
         dlg_ok = preview_dlg is not None and (not hasattr(preview_dlg, 'IsDestroyed') or not preview_dlg.IsDestroyed())
-        if png_bytes and len(png_bytes) > 10 and dlg_ok:
+        if png_bytes and len(png_bytes) > 10:
             try:
                 img = wx.Image(io.BytesIO(png_bytes))
                 if img.IsOk():
-                    w, h = self.GetSize()
+                    # Thumbnail: scale to fit within this widget's size
+                    tw, th = self.GetSize()
+                    if tw < 10 or th < 10: tw, th = 100, 80
                     iw, ih = img.GetWidth(), img.GetHeight()
-                    max_w, max_h = 600, 450
-                    sc = min(max_w/iw, max_h/ih, 1.0)
-                    nw, nh = int(iw*sc), int(ih*sc)
-                    new_bmp = wx.Bitmap(img.Scale(nw, nh, wx.IMAGE_QUALITY_HIGH))
+                    tsc = min(tw/iw, th/ih, 1.0)
+                    tnw, tnh = int(iw*tsc), int(ih*tsc)
+                    thumb_bmp = wx.Bitmap(img.Scale(tnw, tnh, wx.IMAGE_QUALITY_HIGH))
+                    self._sb.SetBitmap(thumb_bmp)
+                    self.SetToolTip("Click to enlarge")
+                    self.Layout()
                     self._sb.SetBitmap(new_bmp)
                     self.SetToolTip("Click to enlarge")
                     self.Layout()
                     sb_ok = preview_sb is not None and (not hasattr(preview_sb, 'IsDestroyed') or not preview_sb.IsDestroyed())
-                    if sb_ok:
-                        preview_sb.SetBitmap(new_bmp)
+                    # Also update the saved bitmap reference for preview dialog reuse
+                    parent._preview_saved_png = png_bytes if dlg_ok else None
+                    if sb_ok and hasattr(parent, '_preview_saved_png'):
+                        try:
+                            pimg = wx.Image(io.BytesIO(png_bytes))
+                            if pimg.IsOk():
+                                pw, ph = 600, 450
+                                pw2, ph2 = pimg.GetWidth(), pimg.GetHeight()
+                                psc = min(pw/pw2, ph/ph2, 1.0)
+                                pnbmp = wx.Bitmap(pimg.Scale(int(pw2*psc), int(ph2*psc), wx.IMAGE_QUALITY_HIGH))
+                                preview_sb.SetBitmap(pnbmp)
+                                preview_dlg.Raise()
+                                preview_dlg.Fit()
+                                preview_dlg.Layout()
+                        except Exception: pass
                         preview_dlg.Raise()
                         preview_dlg.Fit()
                         preview_dlg.Layout()
