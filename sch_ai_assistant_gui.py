@@ -44,7 +44,8 @@ class ThumbnailButton(wx.Panel):
         parent = self.GetTopLevelParent()
         preview_dlg = getattr(parent, '_preview_dlg', None)
         preview_sb = getattr(parent, '_preview_sb', None)
-        if png_bytes and len(png_bytes) > 10 and preview_dlg and not preview_dlg.IsDestroyed():
+        dlg_ok = preview_dlg is not None and (not hasattr(preview_dlg, 'IsDestroyed') or not preview_dlg.IsDestroyed())
+        if png_bytes and len(png_bytes) > 10 and dlg_ok:
             try:
                 img = wx.Image(io.BytesIO(png_bytes))
                 if img.IsOk():
@@ -57,18 +58,18 @@ class ThumbnailButton(wx.Panel):
                     self._sb.SetBitmap(new_bmp)
                     self.SetToolTip("Click to enlarge")
                     self.Layout()
-                    if preview_sb and not preview_sb.IsDestroyed():
+                    sb_ok = preview_sb is not None and (not hasattr(preview_sb, 'IsDestroyed') or not preview_sb.IsDestroyed())
+                    if sb_ok:
                         preview_sb.SetBitmap(new_bmp)
                         preview_dlg.Raise()
                         preview_dlg.Fit()
                         preview_dlg.Layout()
                     return
             except Exception: pass
-        else:
-            empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
-            self._sb.SetBitmap(empty)
-            self.SetToolTip("No image")
-            self.Layout()
+        empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
+        self._sb.SetBitmap(empty)
+        self.SetToolTip("No image")
+        self.Layout()
 
     def get_png(self): return self._png
 
@@ -81,7 +82,8 @@ class ThumbnailButton(wx.Panel):
         self._sb.SetBitmap(empty)
         self.SetToolTip("")
         self.Layout()
-        if preview_dlg and preview_sb and not preview_dlg.IsDestroyed():
+        dlg_ok = preview_dlg is not None and (not hasattr(preview_dlg, 'IsDestroyed') or not preview_dlg.IsDestroyed())
+        if dlg_ok and preview_sb:
             preview_sb.SetBitmap(empty)
             preview_dlg.Raise()
             preview_dlg.Fit()
@@ -101,7 +103,8 @@ class ThumbnailButton(wx.Panel):
             return
         # Reuse existing preview dialog if still open
         parent = self.GetTopLevelParent()
-        if hasattr(parent, '_preview_dlg') and parent._preview_dlg and not parent._preview_dlg.IsDestroyed():
+        old_dlg = getattr(parent, '_preview_dlg', None)
+        if old_dlg and (not hasattr(old_dlg, 'IsDestroyed') or not old_dlg.IsDestroyed()):
             old_dlg = parent._preview_dlg
             old_sb = getattr(parent, '_preview_sb', None)
             if old_sb and old_sb.IsOk() and old_sb.IsAlive():
