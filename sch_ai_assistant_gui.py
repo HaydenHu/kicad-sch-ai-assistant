@@ -70,29 +70,24 @@ class ThumbnailButton(wx.Panel):
 
     def _on_click(self, event):
         if self._png and len(self._png) > 10:
+            dlg = wx.Dialog(self, title=T("preview_title"),
+                            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+            p = wx.Panel(dlg); s = wx.BoxSizer(wx.VERTICAL)
             img = wx.Image(io.BytesIO(self._png))
-            if not img.IsOk(): return
             iw, ih = img.GetWidth(), img.GetHeight()
-            max_w, max_h = 700, 500
-            sc = min(max_w/iw, max_h/ih, 1.0)
-            nw, nh = int(iw*sc), int(ih*sc)
-            bmp = wx.Bitmap(img.Scale(nw, nh, wx.IMAGE_QUALITY_HIGH))
-            dlg = wx.Dialog(self, title=T("preview_title"), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-            dlg.SetClientSize((nw+20, nh+20))
-            dlg.CentreOnParent()
-            p = wx.Panel(dlg)
-            s = wx.BoxSizer(wx.VERTICAL)
+            dw, dh = min(600, self.GetParent().GetParent().GetSize()[0]-40), min(500, self.GetParent().GetParent().GetSize()[1]-40)
+            sc = min(dw/iw, dh/ih, 1.0)
+            bmp = wx.Bitmap(img.Scale(int(iw*sc), int(ih*sc)))
             sb = wx.StaticBitmap(p, bitmap=bmp)
             s.Add(sb, 1, wx.EXPAND|wx.ALL, 10)
-            # Bind close button on dialog
             cb = wx.Button(dlg, wx.ID_CLOSE, "Close")
             cb.Bind(wx.EVT_BUTTON, lambda e: dlg.Close())
-            p2 = wx.Panel(dlg); bs = wx.BoxSizer(wx.VERTICAL)
-            bs.Add(sb, 1, wx.EXPAND|wx.ALL, 10)
-            bs.Add(cb, 0, wx.ALIGN_CENTER|wx.BOTTOM, 8)
-            p2.SetSizer(bs)
+            s.Add(cb, 0, wx.ALIGN_CENTER|wx.BOTTOM, 8)
+            p.SetSizer(s)
+            dlg.SetClientSize((dw+20, dh+80))
             dlg.CentreOnParent()
-            dlg.Show()
+            dlg.ShowModal()
+            dlg.Destroy()
 
 class ChatMessagePanel(wx.Panel):
     def __init__(self, parent, role, text, image_bytes=None):
