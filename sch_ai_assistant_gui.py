@@ -69,25 +69,30 @@ class ThumbnailButton(wx.Panel):
         self.Layout()
 
     def _on_click(self, event):
-        if self._png and len(self._png) > 10:
-            dlg = wx.Dialog(self, title=T("preview_title"),
-                            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-            p = wx.Panel(dlg); s = wx.BoxSizer(wx.VERTICAL)
+        if not self._png or len(self._png) < 10: return
+        try:
             img = wx.Image(io.BytesIO(self._png))
+            if not img.IsOk(): return
             iw, ih = img.GetWidth(), img.GetHeight()
-            dw, dh = min(600, self.GetParent().GetParent().GetSize()[0]-40), min(500, self.GetParent().GetParent().GetSize()[1]-40)
-            sc = min(dw/iw, dh/ih, 1.0)
-            bmp = wx.Bitmap(img.Scale(int(iw*sc), int(ih*sc)))
-            sb = wx.StaticBitmap(p, bitmap=bmp)
-            s.Add(sb, 1, wx.EXPAND|wx.ALL, 10)
-            cb = wx.Button(dlg, wx.ID_CLOSE, "Close")
-            cb.Bind(wx.EVT_BUTTON, lambda e: dlg.Close())
-            s.Add(cb, 0, wx.ALIGN_CENTER|wx.BOTTOM, 8)
-            p.SetSizer(s)
-            dlg.SetClientSize((dw+20, dh+80))
-            dlg.CentreOnParent()
-            dlg.ShowModal()
-            dlg.Destroy()
+            max_w, max_h = 600, 450
+            sc = min(max_w/iw, max_h/ih, 1.0)
+            nw, nh = int(iw*sc), int(ih*sc)
+            bmp = wx.Bitmap(img.Scale(nw, nh, wx.IMAGE_QUALITY_HIGH))
+        except Exception:
+            return
+        dlg = wx.Dialog(self.GetTopLevelParent(), title=T("preview_title"), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        mp = wx.Panel(dlg)
+        s = wx.BoxSizer(wx.VERTICAL)
+        sb = wx.StaticBitmap(mp, bitmap=bmp)
+        s.Add(sb, 1, wx.EXPAND|wx.ALL, 10)
+        cb = wx.Button(mp, wx.ID_CLOSE, "Close")
+        cb.Bind(wx.EVT_BUTTON, lambda e: dlg.Destroy())
+        s.Add(cb, 0, wx.ALIGN_CENTER|wx.BOTTOM, 8)
+        mp.SetSizer(s)
+        dlg.SetClientSize((nw+20, nh+70))
+        dlg.CentreOnParent()
+        dlg.ShowModal()
+        dlg.Destroy()
 
 class ChatMessagePanel(wx.Panel):
     def __init__(self, parent, role, text, image_bytes=None):
