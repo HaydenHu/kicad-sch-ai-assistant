@@ -44,46 +44,36 @@ class ThumbnailButton(wx.Panel):
         parent = self.GetTopLevelParent()
         preview_dlg = getattr(parent, '_preview_dlg', None)
         preview_sb = getattr(parent, '_preview_sb', None)
-        dlg_ok = preview_dlg is not None and (not hasattr(preview_dlg, 'IsDestroyed') or not preview_dlg.IsDestroyed())
+
         if png_bytes and len(png_bytes) > 10:
             try:
                 img = wx.Image(io.BytesIO(png_bytes))
                 if img.IsOk():
-                    # Thumbnail: scale to fit within this widget's size
-                    tw, th = self.GetSize()
-                    if tw < 10 or th < 10: tw, th = 100, 80
+                    # Thumbnail: fit to widget size
+                    w, h = max(self.GetSize()[0], 100), max(self.GetSize()[1], 80)
                     iw, ih = img.GetWidth(), img.GetHeight()
-                    tsc = min(tw/iw, th/ih, 1.0)
-                    tnw, tnh = int(iw*tsc), int(ih*tsc)
-                    thumb_bmp = wx.Bitmap(img.Scale(tnw, tnh, wx.IMAGE_QUALITY_HIGH))
+                    sc = min(w/iw, h/ih, 1.0)
+                    thumb_bmp = wx.Bitmap(img.Scale(int(iw*sc), int(ih*sc)))
                     self._sb.SetBitmap(thumb_bmp)
                     self.SetToolTip("Click to enlarge")
                     self.Layout()
-                    self._sb.SetBitmap(new_bmp)
-                    self.SetToolTip("Click to enlarge")
-                    self.Layout()
-                    sb_ok = preview_sb is not None and (not hasattr(preview_sb, 'IsDestroyed') or not preview_sb.IsDestroyed())
-                    # Also update the saved bitmap reference for preview dialog reuse
-                    parent._preview_saved_png = png_bytes if dlg_ok else None
-                    if sb_ok and hasattr(parent, '_preview_saved_png'):
-                        try:
-                            pimg = wx.Image(io.BytesIO(png_bytes))
-                            if pimg.IsOk():
-                                pw, ph = 600, 450
-                                pw2, ph2 = pimg.GetWidth(), pimg.GetHeight()
-                                psc = min(pw/pw2, ph/ph2, 1.0)
-                                pnbmp = wx.Bitmap(pimg.Scale(int(pw2*psc), int(ph2*psc), wx.IMAGE_QUALITY_HIGH))
-                                preview_sb.SetBitmap(pnbmp)
-                                preview_dlg.Raise()
-                                preview_dlg.Fit()
-                                preview_dlg.Layout()
-                        except Exception: pass
-                        preview_dlg.Raise()
-                        preview_dlg.Fit()
-                        preview_dlg.Layout()
+
+                    # Update open preview dialog if it exists
+                    if preview_dlg and (not hasattr(preview_dlg, 'IsDestroyed') or not preview_dlg.IsDestroyed()):
+                        if preview_sb and (not hasattr(preview_sb, 'IsDestroyed') or not preview_sb.IsDestroyed()):
+                            pw, ph = 600, 450
+                            pw2, ph2 = img.GetWidth(), img.GetHeight()
+                            psc = min(pw/pw2, ph/ph2, 1.0)
+                            pnbmp = wx.Bitmap(img.Scale(int(pw2*psc), int(ph2*psc), wx.IMAGE_QUALITY_HIGH))
+                            preview_sb.SetBitmap(pnbmp)
+                            preview_dlg.Raise()
+                            preview_dlg.Fit()
+                            preview_dlg.Layout()
                     return
-            except Exception: pass
-        empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
+            except Exception:
+                pass
+
+        empty = wx.Bitmap(max(self.GetSize()[0], 100), max(self.GetSize()[1], 80))
         self._sb.SetBitmap(empty)
         self.SetToolTip("No image")
         self.Layout()
@@ -95,7 +85,7 @@ class ThumbnailButton(wx.Panel):
         parent = self.GetTopLevelParent()
         preview_dlg = getattr(parent, '_preview_dlg', None)
         preview_sb = getattr(parent, '_preview_sb', None)
-        empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
+        empty = wx.Bitmap(max(self.GetSize()[0], 100), max(self.GetSize()[1], 80))
         self._sb.SetBitmap(empty)
         self.SetToolTip("")
         self.Layout()
