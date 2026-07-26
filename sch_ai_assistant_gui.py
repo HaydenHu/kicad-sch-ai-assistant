@@ -80,18 +80,22 @@ class ThumbnailButton(wx.Panel):
             bmp = wx.Bitmap(img.Scale(nw, nh, wx.IMAGE_QUALITY_HIGH))
         except Exception:
             return
-        # Reuse existing preview dialog if still open, otherwise create new
+        # Reuse existing preview dialog if still open
         parent = self.GetTopLevelParent()
         if hasattr(parent, '_preview_dlg') and parent._preview_dlg and not parent._preview_dlg.IsDestroyed():
             old_dlg = parent._preview_dlg
-            old_mp = old_dlg.FindWindow(wx.ID_ANY) or old_dlg.GetChildren()[0]
-            if isinstance(old_mp, wx.Panel):
-                old_mp.GetSizer().Clear()
-                sb = wx.StaticBitmap(old_mp, bitmap=bmp)
-                old_mp.GetSizer().Add(sb, 1, wx.EXPAND|wx.ALL, 10)
-                old_mp.Layout()
+            old_sb = getattr(parent, '_preview_sb', None)
+            if old_sb and old_sb.IsOk() and old_sb.IsAlive():
+                new_bmp = wx.Bitmap(img.Scale(nw, nh, wx.IMAGE_QUALITY_HIGH))
+                old_sb.SetBitmap(new_bmp)
                 old_dlg.Raise()
+                old_dlg.Fit()
+                old_dlg.Layout()
                 return
+        # Create new preview dialog
+        self._new_preview(parent, nw, nh, bmp)
+
+    def _new_preview(self, parent, nw, nh, bmp):
         dlg = wx.Dialog(parent, title=T("preview_title"),
                         style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         mp = wx.Panel(dlg)
@@ -101,9 +105,13 @@ class ThumbnailButton(wx.Panel):
         mp.SetSizer(s)
         dlg.SetClientSize((nw+20, nh+70))
         dlg.CentreOnParent()
-        parent._preview_dlg = dlg  # track for reuse
+        parent._preview_dlg = dlg
+        parent._preview_sb = sb
         dlg.Show()
-        dlg.Bind(wx.EVT_CLOSE, lambda e: (parent.__setattr__('_preview_dlg', None), dlg.Destroy()))
+        dlg.Bind(wx.EVT_CLOSE, lambda e: (
+            parent.__setattr__('_preview_dlg', None),
+            parent.__setattr__('_preview_sb', None),
+            dlg.Destroy()))
 
 class ChatMessagePanel(wx.Panel):
     def __init__(self, parent, role, text, image_bytes=None):
