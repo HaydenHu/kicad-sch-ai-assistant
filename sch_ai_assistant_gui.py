@@ -41,32 +41,51 @@ class ThumbnailButton(wx.Panel):
 
     def set_image(self, png_bytes):
         self._png = png_bytes
-        if png_bytes and len(png_bytes) > 10:
+        parent = self.GetTopLevelParent()
+        preview_dlg = getattr(parent, '_preview_dlg', None)
+        preview_sb = getattr(parent, '_preview_sb', None)
+        if png_bytes and len(png_bytes) > 10 and preview_dlg and not preview_dlg.IsDestroyed():
             try:
                 img = wx.Image(io.BytesIO(png_bytes))
                 if img.IsOk():
                     w, h = self.GetSize()
                     iw, ih = img.GetWidth(), img.GetHeight()
-                    scale = min(w/iw, h/ih, 1.0)
-                    bmp = wx.Bitmap(img.Scale(int(iw*scale), int(ih*scale)))
-                    self._sb.SetBitmap(bmp)
+                    max_w, max_h = 600, 450
+                    sc = min(max_w/iw, max_h/ih, 1.0)
+                    nw, nh = int(iw*sc), int(ih*sc)
+                    new_bmp = wx.Bitmap(img.Scale(nw, nh, wx.IMAGE_QUALITY_HIGH))
+                    self._sb.SetBitmap(new_bmp)
                     self.SetToolTip("Click to enlarge")
                     self.Layout()
+                    if preview_sb and not preview_sb.IsDestroyed():
+                        preview_sb.SetBitmap(new_bmp)
+                        preview_dlg.Raise()
+                        preview_dlg.Fit()
+                        preview_dlg.Layout()
                     return
             except Exception: pass
-        empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
-        self._sb.SetBitmap(empty)
-        self.SetToolTip("No image")
-        self.Layout()
+        else:
+            empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
+            self._sb.SetBitmap(empty)
+            self.SetToolTip("No image")
+            self.Layout()
 
     def get_png(self): return self._png
 
     def clear(self):
         self._png = b""
+        parent = self.GetTopLevelParent()
+        preview_dlg = getattr(parent, '_preview_dlg', None)
+        preview_sb = getattr(parent, '_preview_sb', None)
         empty = wx.Bitmap(self.GetSize()[0], self.GetSize()[1])
         self._sb.SetBitmap(empty)
         self.SetToolTip("")
         self.Layout()
+        if preview_dlg and preview_sb and not preview_dlg.IsDestroyed():
+            preview_sb.SetBitmap(empty)
+            preview_dlg.Raise()
+            preview_dlg.Fit()
+            preview_dlg.Layout()
 
     def _on_click(self, event):
         if not self._png or len(self._png) < 10: return
