@@ -84,11 +84,15 @@ class ThumbnailButton(wx.Panel):
             s = wx.BoxSizer(wx.VERTICAL)
             sb = wx.StaticBitmap(p, bitmap=bmp)
             s.Add(sb, 1, wx.EXPAND|wx.ALL, 10)
-            sb.Bind(wx.EVT_LEFT_DOWN, lambda e: dlg.Close())
-            dlg.Bind(wx.EVT_CHAR_HOOK, lambda e: (dlg.Close(), None) if e.GetKeyCode()==wx.WXK_ESCAPE else e.Skip())
-            p.SetSizer(s)
+            # Bind close button on dialog
+            cb = wx.Button(dlg, wx.ID_CLOSE, "Close")
+            cb.Bind(wx.EVT_BUTTON, lambda e: dlg.Close())
+            p2 = wx.Panel(dlg); bs = wx.BoxSizer(wx.VERTICAL)
+            bs.Add(sb, 1, wx.EXPAND|wx.ALL, 10)
+            bs.Add(cb, 0, wx.ALIGN_CENTER|wx.BOTTOM, 8)
+            p2.SetSizer(bs)
+            dlg.CentreOnParent()
             dlg.Show()
-            dlg.Destroy()
 
 class ChatMessagePanel(wx.Panel):
     def __init__(self, parent, role, text, image_bytes=None):
