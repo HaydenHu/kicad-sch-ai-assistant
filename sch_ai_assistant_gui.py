@@ -377,11 +377,14 @@ class SchAiAssistantDialog(wx.Dialog):
             model_name = list(MODEL_PRESETS.keys())[idx]
             _, endpoint = MODEL_PRESETS[model_name]
             self.endpoint_ctrl.SetValue(endpoint)
-        save_api = wx.Button(a_sz.GetStaticBox(), label=T("save_key"))
-        save_api.Bind(wx.EVT_BUTTON, self._on_save_api)
-        a_sz.Add(save_api, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, 4)
+
+        # Save button
+        save_btn = wx.Button(a_sz.GetStaticBox(), label=T("save_key"))
+        save_btn.Bind(wx.EVT_BUTTON, self._on_save_api)
+        a_sz.Add(save_btn, 0, wx.EXPAND|wx.ALL, 4)
         sz.Add(a_sz, 0, wx.EXPAND|wx.ALL|wx.BOTTOM, 8)
-        # Symbol
+
+        # Symbol Settings section
         sb = wx.StaticBox(pan, label="Symbol Settings")
         s_sz = wx.StaticBoxSizer(sb, wx.VERTICAL)
         s_sz.Add(wx.StaticText(s_sz.GetStaticBox(), label="Symbol Name:"), 0, wx.LEFT, 4)
