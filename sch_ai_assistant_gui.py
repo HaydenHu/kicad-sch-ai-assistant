@@ -345,24 +345,38 @@ class SchAiAssistantDialog(wx.Dialog):
             lambda e: __import__('webbrowser').open("https://platform.agnes-ai.com/settings/apiKeys"))
         key_row.Add(free_btn, 0)
         a_sz.Add(key_row, 0, wx.EXPAND|wx.ALL, 4)
+        # Model presets with auto-endpoint
+        MODEL_PRESETS = {
+            "agnes-2.5-flash": ("agnes-2.5-flash", "https://api.agnes-ai.cn/v1/chat/completions"),
+            "agnes-2.0-flash": ("agnes-2.0-flash", "https://api.agnes-ai.cn/v1/chat/completions"),
+            "agnes-2.5-pro": ("agnes-2.5-pro", "https://api.agnes-ai.cn/v1/chat/completions"),
+            "minimax-text-01": ("minimax-text-01", "https://api.minimax.chat/v1"),
+            "glm-4-flash": ("glm-4-flash", "https://open.bigmodel.cn/api/paas/v4"),
+            "kimi-k2.5": ("kimi-k2.5", "https://api.moonshot.cn/v1"),
+            "moonshot-v1-8k": ("moonshot-v1-8k", "https://api.moonshot.cn/v1"),
+            "deepseek-chat": ("deepseek-chat", "https://api.deepseek.com/v1"),
+            "qwen2.5-72b": ("qwen2.5-72b-instruct", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+        }
+        model_choices = [f"{m}   ({desc})" for m, (_, desc) in zip(MODEL_PRESETS.keys(), [(v[0], v[1].split('/')[-1]) for v in MODEL_PRESETS.values()])]
+
         a_sz.Add(wx.StaticText(a_sz.GetStaticBox(), label="Model:"), 0, wx.LEFT, 4)
-        self.model_ctrl = wx.Choice(a_sz.GetStaticBox(), choices=[
-            "agnes-2.5-flash   (默认，推荐)",
-            "agnes-2.0-flash",
-            "agnes-2.5-pro     (更强推理)",
-            "agnes-image-2.1-flash  (图片理解)",
-            "minimax-text-01",
-            "glm-4-flash",
-            "kimi-k2.5",
-            "moonshot-v1-128k",
-            "deepseek-chat",
-            "qwen2.5-72b",
-        ])
+        # Store clean model names for easy access
+        self._model_names = list(MODEL_PRESETS.keys())
+        self.model_ctrl = wx.Choice(a_sz.GetStaticBox(), choices=model_choices)
         self.model_ctrl.SetSelection(0)
+        self.model_ctrl.Bind(wx.EVT_CHOICE, self._on_model_change)
         a_sz.Add(self.model_ctrl, 0, wx.EXPAND|wx.ALL, 4)
         a_sz.Add(wx.StaticText(a_sz.GetStaticBox(), label="Endpoint:"), 0, wx.LEFT, 4)
-        self.endpoint_ctrl = wx.TextCtrl(a_sz.GetStaticBox(), value="https://api.agnes-ai.cn/v1/chat/completions")
+        self.endpoint_ctrl = wx.TextCtrl(a_sz.GetStaticBox(), value=list(MODEL_PRESETS.values())[0][1])
         a_sz.Add(self.endpoint_ctrl, 0, wx.EXPAND|wx.ALL, 4)
+
+    def _on_model_change(self, event):
+        """Auto-update endpoint when model is selected."""
+        idx = self.model_ctrl.GetSelection()
+        if idx >= 0:
+            model_name = list(MODEL_PRESETS.keys())[idx]
+            _, endpoint = MODEL_PRESETS[model_name]
+            self.endpoint_ctrl.SetValue(endpoint)
         save_api = wx.Button(a_sz.GetStaticBox(), label=T("save_key"))
         save_api.Bind(wx.EVT_BUTTON, self._on_save_api)
         a_sz.Add(save_api, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, 4)
@@ -505,7 +519,7 @@ class SchAiAssistantDialog(wx.Dialog):
         try:
             from sch_ai_assistant import analyze_pin_diagram
             endpoint = self.endpoint_ctrl.GetValue().strip() or "https://api.agnes-ai.cn/v1/chat/completions"
-            model = self.model_ctrl.GetStringSelection().split()[0] if self.model_ctrl.GetSelection() >= 0 else "agnes-2.5-flash"
+            model = self._model_names[self.model_ctrl.GetSelection()] if self.model_ctrl.GetSelection() >= 0 else "agnes-2.5-flash"
             b64 = base64.b64encode(image_bytes).decode("utf-8")
             pins = analyze_pin_diagram(self.api_key, model, endpoint, b64)
             _log(f"[ANALYZE] got {len(pins) if pins else 0} pins")
@@ -539,7 +553,7 @@ class SchAiAssistantDialog(wx.Dialog):
         try:
             import requests
             endpoint = self.endpoint_ctrl.GetValue().strip() or "https://api.agnes-ai.cn/v1/chat/completions"
-            model = self.model_ctrl.GetStringSelection().split()[0] if self.model_ctrl.GetSelection() >= 0 else "agnes-2.5-flash"
+            model = self._model_names[self.model_ctrl.GetSelection()] if self.model_ctrl.GetSelection() >= 0 else "agnes-2.5-flash"
             headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
             payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
             resp = requests.post(endpoint, headers=headers, json=payload, timeout=60)
