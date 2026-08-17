@@ -328,97 +328,123 @@ class SchAiAssistantDialog(wx.Dialog):
         panel.SetDropTarget(DropTarget(self._load_file))
 
     def _create_settings_dlg(self):
+        """Create the settings dialog with API and Symbol settings."""
         self.settings_dlg = wx.Dialog(self, title=T("settings_title"),
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        self.settings_dlg.SetSize((420,550))
-        pan = wx.Panel(self.settings_dlg); sz = wx.BoxSizer(wx.VERTICAL)
-        # API
-        ab = wx.StaticBox(pan, label="API Settings")
-        a_sz = wx.StaticBoxSizer(ab, wx.VERTICAL)
-        a_sz.Add(wx.StaticText(a_sz.GetStaticBox(), label="API Key:"), 0, wx.TOP|wx.LEFT, 4)
-        key_row = wx.BoxSizer(wx.HORIZONTAL)
-        self.api_key_ctrl = wx.TextCtrl(a_sz.GetStaticBox(), value=self.api_key, style=wx.TE_PASSWORD)
-        key_row.Add(self.api_key_ctrl, 1, wx.EXPAND|wx.RIGHT, 4)
-        free_btn = wx.Button(a_sz.GetStaticBox(), label=T("free_key"), size=(90, -1))
-        free_btn.SetToolTip("https://platform.agnes-ai.com/settings/apiKeys")
-        free_btn.Bind(wx.EVT_BUTTON,
-            lambda e: __import__('webbrowser').open("https://platform.agnes-ai.com/settings/apiKeys"))
-        key_row.Add(free_btn, 0)
-        a_sz.Add(key_row, 0, wx.EXPAND|wx.ALL, 4)
-        # Model presets with auto-endpoint
-        MODEL_PRESETS = {
-            "agnes-2.5-flash": ("agnes-2.5-flash", "https://api.agnes-ai.cn/v1/chat/completions"),
-            "agnes-2.0-flash": ("agnes-2.0-flash", "https://api.agnes-ai.cn/v1/chat/completions"),
-            "agnes-2.5-pro": ("agnes-2.5-pro", "https://api.agnes-ai.cn/v1/chat/completions"),
-            "minimax-text-01": ("minimax-text-01", "https://api.minimax.chat/v1"),
-            "glm-4-flash": ("glm-4-flash", "https://open.bigmodel.cn/api/paas/v4"),
-            "kimi-k2.5": ("kimi-k2.5", "https://api.moonshot.cn/v1"),
-            "moonshot-v1-8k": ("moonshot-v1-8k", "https://api.moonshot.cn/v1"),
-            "deepseek-chat": ("deepseek-chat", "https://api.deepseek.com/v1"),
-            "qwen2.5-72b": ("qwen2.5-72b-instruct", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
-        }
-        model_choices = [f"{m}   ({desc})" for m, (_, desc) in zip(MODEL_PRESETS.keys(), [(v[0], v[1].split('/')[-1]) for v in MODEL_PRESETS.values()])]
+        self.settings_dlg.SetSize((420, 600))
+        pan = wx.Panel(self.settings_dlg)
+        sz = wx.BoxSizer(wx.VERTICAL)
 
-        a_sz.Add(wx.StaticText(a_sz.GetStaticBox(), label="Model:"), 0, wx.LEFT, 4)
-        # Store clean model names for easy access
+        # ── API Settings Section ──
+        ab = wx.StaticBox(pan, label=T("api_settings"))
+        a_sz = wx.StaticBoxSizer(ab, wx.VERTICAL)
+
+        # API Key
+        a_sz.Add(wx.StaticText(ab, label="API Key:"), 0, wx.TOP|wx.LEFT, 6)
+        key_row = wx.BoxSizer(wx.HORIZONTAL)
+        self.api_key_ctrl = wx.TextCtrl(ab, value=self.api_key, style=wx.TE_PASSWORD)
+        key_row.Add(self.api_key_ctrl, 1, wx.EXPAND|wx.RIGHT, 6)
+        free_btn = wx.Button(ab, label=T("free_key"), size=(100, -1))
+        free_btn.Bind(wx.EVT_BUTTON, lambda e: __import__('webbrowser').open("https://platform.agnes-ai.com/settings/apiKeys"))
+        key_row.Add(free_btn, 0, wx.LEFT, 6)
+        a_sz.Add(key_row, 0, wx.EXPAND|wx.ALL, 6)
+
+        # Model selection with auto-endpoint
+        MODEL_PRESETS = {
+            "agnes-2.5-flash": "https://api.agnes-ai.cn/v1/chat/completions",
+            "agnes-2.0-flash": "https://api.agnes-ai.cn/v1/chat/completions",
+            "minimax-text-01": "https://api.minimax.chat/v1",
+            "glm-4-flash": "https://open.bigmodel.cn/api/paas/v4",
+            "kimi-k2.5": "https://api.moonshot.cn/v1",
+            "deepseek-chat": "https://api.deepseek.com/v1",
+        }
         self._model_names = list(MODEL_PRESETS.keys())
-        self.model_ctrl = wx.Choice(a_sz.GetStaticBox(), choices=model_choices)
+
+        a_sz.Add(wx.StaticText(ab, label="Model:"), 0, wx.TOP|wx.LEFT, 6)
+        model_display = [f"{m}   ({MODEL_PRESETS[m].split('/')[-2]})" for m in self._model_names]
+        self.model_ctrl = wx.Choice(ab, choices=model_display)
         self.model_ctrl.SetSelection(0)
         self.model_ctrl.Bind(wx.EVT_CHOICE, self._on_model_change)
-        a_sz.Add(self.model_ctrl, 0, wx.EXPAND|wx.ALL, 4)
-        a_sz.Add(wx.StaticText(a_sz.GetStaticBox(), label="Endpoint:"), 0, wx.LEFT, 4)
-        self.endpoint_ctrl = wx.TextCtrl(a_sz.GetStaticBox(), value=list(MODEL_PRESETS.values())[0][1])
-        a_sz.Add(self.endpoint_ctrl, 0, wx.EXPAND|wx.ALL, 4)
+        a_sz.Add(self.model_ctrl, 0, wx.EXPAND|wx.ALL, 6)
+
+        a_sz.Add(wx.StaticText(ab, label="Endpoint:"), 0, wx.TOP|wx.LEFT, 6)
+        self.endpoint_ctrl = wx.TextCtrl(ab, value=list(MODEL_PRESETS.values())[0])
+        a_sz.Add(self.endpoint_ctrl, 0, wx.EXPAND|wx.ALL, 6)
+
+        # Save API button
+        save_api_btn = wx.Button(ab, label=T("save_key"))
+        save_api_btn.Bind(wx.EVT_BUTTON, self._on_save_api)
+        a_sz.Add(save_api_btn, 0, wx.ALIGN_RIGHT|wx.ALL, 6)
+        sz.Add(a_sz, 0, wx.EXPAND|wx.ALL, 8)
+
+        # ── Symbol Settings Section ──
+        sb = wx.StaticBox(pan, label=T("symbol_settings"))
+        s_sz = wx.StaticBoxSizer(sb, wx.VERTICAL)
+
+        s_sz.Add(wx.StaticText(sb, label="Symbol Name:"), 0, wx.TOP|wx.LEFT, 6)
+        self.sym_name_ctrl = wx.TextCtrl(sb, value="NEW_CHIP")
+        s_sz.Add(self.sym_name_ctrl, 0, wx.EXPAND|wx.ALL, 4)
+
+        s_sz.Add(wx.StaticText(sb, label="Ref Prefix:"), 0, wx.TOP|wx.LEFT, 6)
+        self.ref_prefix_ctrl = wx.TextCtrl(sb, value="U")
+        s_sz.Add(self.ref_prefix_ctrl, 0, wx.EXPAND|wx.ALL, 4)
+
+        s_sz.Add(wx.StaticText(sb, label="Pin Length (mm):"), 0, wx.TOP|wx.LEFT, 6)
+        self.pin_len_ctrl = wx.SpinCtrlDouble(sb, value="2.54", min=1.0, max=20.0, inc=0.5)
+        self.pin_len_ctrl.SetDigits(2)
+        s_sz.Add(self.pin_len_ctrl, 0, wx.EXPAND|wx.ALL, 4)
+
+        s_sz.Add(wx.StaticText(sb, label="Pin Spacing (mm):"), 0, wx.TOP|wx.LEFT, 6)
+        self.pin_spacing_ctrl = wx.SpinCtrlDouble(sb, value="2.54", min=1.0, max=20.0, inc=0.5)
+        self.pin_spacing_ctrl.SetDigits(2)
+        s_sz.Add(self.pin_spacing_ctrl, 0, wx.EXPAND|wx.ALL, 4)
+
+        self.show_numbers_cb = wx.CheckBox(sb, label="Show Pin Numbers")
+        self.show_numbers_cb.SetValue(True)
+        s_sz.Add(self.show_numbers_cb, 0, wx.LEFT|wx.BOTTOM, 8)
+
+        self.show_names_cb = wx.CheckBox(sb, label="Show Pin Names")
+        self.show_names_cb.SetValue(True)
+        s_sz.Add(self.show_names_cb, 0, wx.LEFT|wx.BOTTOM, 8)
+        sz.Add(s_sz, 0, wx.EXPAND|wx.ALL, 8)
+
+        # ── Dialog Buttons ──
+        bb = wx.StdDialogButtonSizer()
+        ok_btn = wx.Button(pan, wx.ID_OK, "OK")
+        cancel_btn = wx.Button(pan, wx.ID_CANCEL, "Cancel")
+        bb.AddButton(ok_btn)
+        bb.AddButton(cancel_btn)
+        bb.Realize()
+        ok_btn.Bind(wx.EVT_BUTTON, lambda e: self.settings_dlg.EndModal(0))
+        cancel_btn.Bind(wx.EVT_BUTTON, lambda e: self.settings_dlg.EndModal(0))
+        sz.Add(bb, 0, wx.EXPAND|wx.ALL, 8)
+
+        pan.SetSizer(sz)
 
     def _on_model_change(self, event):
         """Auto-update endpoint when model is selected."""
         idx = self.model_ctrl.GetSelection()
         if idx >= 0:
-            model_name = list(MODEL_PRESETS.keys())[idx]
-            _, endpoint = MODEL_PRESETS[model_name]
-            self.endpoint_ctrl.SetValue(endpoint)
-
-        # Save button
-        save_btn = wx.Button(a_sz.GetStaticBox(), label=T("save_key"))
-        save_btn.Bind(wx.EVT_BUTTON, self._on_save_api)
-        a_sz.Add(save_btn, 0, wx.EXPAND|wx.ALL, 4)
-        sz.Add(a_sz, 0, wx.EXPAND|wx.ALL|wx.BOTTOM, 8)
-
-        # Symbol Settings section
-        sb = wx.StaticBox(pan, label="Symbol Settings")
-        s_sz = wx.StaticBoxSizer(sb, wx.VERTICAL)
-        s_sz.Add(wx.StaticText(s_sz.GetStaticBox(), label="Symbol Name:"), 0, wx.LEFT, 4)
-        self.sym_name_ctrl = wx.TextCtrl(s_sz.GetStaticBox(), value="NEW_CHIP")
-        s_sz.Add(self.sym_name_ctrl, 0, wx.EXPAND|wx.ALL, 4)
-        s_sz.Add(wx.StaticText(s_sz.GetStaticBox(), label="Ref Prefix:"), 0, wx.LEFT, 4)
-        self.ref_prefix_ctrl = wx.TextCtrl(s_sz.GetStaticBox(), value="U")
-        s_sz.Add(self.ref_prefix_ctrl, 0, wx.EXPAND|wx.ALL, 4)
-        s_sz.Add(wx.StaticText(s_sz.GetStaticBox(), label="Pin Length (mm):"), 0, wx.LEFT, 4)
-        self.pin_len_ctrl = wx.SpinCtrlDouble(s_sz.GetStaticBox(), value="2.54", min=1.0, max=20, inc=0.5)
-        self.pin_len_ctrl.SetDigits(2); s_sz.Add(self.pin_len_ctrl, 0, wx.EXPAND|wx.ALL, 4)
-        s_sz.Add(wx.StaticText(s_sz.GetStaticBox(), label="Pin Spacing (mm):"), 0, wx.LEFT, 4)
-        self.pin_spacing_ctrl = wx.SpinCtrlDouble(s_sz.GetStaticBox(), value="2.54", min=1.0, max=20, inc=0.5)
-        self.pin_spacing_ctrl.SetDigits(2); s_sz.Add(self.pin_spacing_ctrl, 0, wx.EXPAND|wx.ALL, 4)
-        self.show_numbers_cb = wx.CheckBox(s_sz.GetStaticBox(), label="Show Pin Numbers")
-        self.show_numbers_cb.SetValue(True); s_sz.Add(self.show_numbers_cb, 0, wx.LEFT, 2)
-        self.show_names_cb = wx.CheckBox(s_sz.GetStaticBox(), label="Show Pin Names")
-        self.show_names_cb.SetValue(True); s_sz.Add(self.show_names_cb, 0, wx.LEFT, 2)
-        sz.Add(s_sz, 0, wx.EXPAND|wx.ALL|wx.BOTTOM, 8)
-        bb = wx.StdDialogButtonSizer()
-        ok_btn = wx.Button(pan, wx.ID_OK, "OK"); cancel_btn = wx.Button(pan, wx.ID_CANCEL, "Cancel")
-        bb.AddButton(ok_btn); bb.AddButton(cancel_btn); bb.Realize()
-        ok_btn.Bind(wx.EVT_BUTTON, lambda e: self.settings_dlg.EndModal(0))
-        cancel_btn.Bind(wx.EVT_BUTTON, lambda e: self.settings_dlg.EndModal(0))
-        sz.Add(bb, 0, wx.EXPAND|wx.ALL, 8)
-        pan.SetSizer(sz)
-
-    def _on_settings(self, event):
-        self.settings_dlg.ShowModal()
+            model_name = self._model_names[idx]
+            MODEL_PRESETS = {
+                "agnes-2.5-flash": "https://api.agnes-ai.cn/v1/chat/completions",
+                "agnes-2.0-flash": "https://api.agnes-ai.cn/v1/chat/completions",
+                "minimax-text-01": "https://api.minimax.chat/v1",
+                "glm-4-flash": "https://open.bigmodel.cn/api/paas/v4",
+                "kimi-k2.5": "https://api.moonshot.cn/v1",
+                "deepseek-chat": "https://api.deepseek.com/v1",
+            }
+            self.endpoint_ctrl.SetValue(MODEL_PRESETS.get(model_name, ""))
 
     def _on_save_api(self, event):
+        """Save API settings to settings.json."""
         self.api_key = self.api_key_ctrl.GetValue().strip()
-        with open(os.path.join(self.plugin_dir, "settings.json"), "w") as f:
-            json.dump({"api_key": self.api_key}, f)
+        try:
+            with open(os.path.join(self.plugin_dir, "settings.json"), "w") as f:
+                json.dump({"api_key": self.api_key}, f)
+            wx.MessageBox(T("api_saved"), "Settings", wx.ICON_INFORMATION)
+        except Exception as e:
+            wx.MessageBox(str(e), "Error", wx.ICON_ERROR)
 
     def _on_paste(self, event):
         _log("[PASTE] start")
