@@ -346,10 +346,10 @@ class SchAiAssistantDialog(wx.Dialog):
         key_row.Add(free_btn, 0)
         a_sz.Add(key_row, 0, wx.EXPAND|wx.ALL, 4)
         a_sz.Add(wx.StaticText(a_sz.GetStaticBox(), label="Model:"), 0, wx.LEFT, 4)
-        self.model_ctrl = wx.TextCtrl(a_sz.GetStaticBox(), value="agnes-2.0-flash")
+        self.model_ctrl = wx.TextCtrl(a_sz.GetStaticBox(), value="agnes-2.5-flash")
         a_sz.Add(self.model_ctrl, 0, wx.EXPAND|wx.ALL, 4)
         a_sz.Add(wx.StaticText(a_sz.GetStaticBox(), label="Endpoint:"), 0, wx.LEFT, 4)
-        self.endpoint_ctrl = wx.TextCtrl(a_sz.GetStaticBox(), value="https://apihub.agnes-ai.com/v1/chat/completions")
+        self.endpoint_ctrl = wx.TextCtrl(a_sz.GetStaticBox(), value="https://api.agnes-ai.cn/v1/chat/completions")
         a_sz.Add(self.endpoint_ctrl, 0, wx.EXPAND|wx.ALL, 4)
         save_api = wx.Button(a_sz.GetStaticBox(), label=T("save_key"))
         save_api.Bind(wx.EVT_BUTTON, self._on_save_api)
@@ -492,8 +492,8 @@ class SchAiAssistantDialog(wx.Dialog):
             wx.CallAfter(self._remove_last_msg); return
         try:
             from sch_ai_assistant import analyze_pin_diagram
-            endpoint = self.endpoint_ctrl.GetValue().strip() or "https://apihub.agnes-ai.com/v1/chat/completions"
-            model = self.model_ctrl.GetValue() or "Agnes-2.5-Flash"
+            endpoint = self.endpoint_ctrl.GetValue().strip() or "https://api.agnes-ai.cn/v1/chat/completions"
+            model = self.model_ctrl.GetValue() or "agnes-2.5-flash"
             b64 = base64.b64encode(image_bytes).decode("utf-8")
             pins = analyze_pin_diagram(self.api_key, model, endpoint, b64)
             _log(f"[ANALYZE] got {len(pins) if pins else 0} pins")
@@ -526,8 +526,8 @@ class SchAiAssistantDialog(wx.Dialog):
             return
         try:
             import requests
-            endpoint = self.endpoint_ctrl.GetValue().strip() or "https://apihub.agnes-ai.com/v1/chat/completions"
-            model = self.model_ctrl.GetValue() or "Agnes-2.5-Flash"
+            endpoint = self.endpoint_ctrl.GetValue().strip() or "https://api.agnes-ai.cn/v1/chat/completions"
+            model = self.model_ctrl.GetValue() or "agnes-2.5-flash"
             headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
             payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
             resp = requests.post(endpoint, headers=headers, json=payload, timeout=60)
