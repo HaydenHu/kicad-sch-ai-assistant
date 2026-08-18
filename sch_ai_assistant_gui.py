@@ -446,6 +446,10 @@ class SchAiAssistantDialog(wx.Dialog):
         except Exception as e:
             wx.MessageBox(str(e), "Error", wx.ICON_ERROR)
 
+    def _on_settings(self, event):
+        """Open settings dialog."""
+        self.settings_dlg.ShowModal()
+
     def _on_paste(self, event):
         _log("[PASTE] start")
         success = False
