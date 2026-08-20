@@ -30,6 +30,14 @@ SHAPE_CHOICES = ["line","inverted","clock","inverted_clock",
     "input_low","clock_low","output_low","non_logic"]
 SIDE_CHOICES = ["left","right","top","bottom"]
 
+MODEL_PRESETS = {
+    "agnes-2.5-flash": "https://api.agnes-ai.cn/v1/chat/completions",
+    "agnes-2.5-pro": "https://api.agnes-ai.cn/v1/chat/completions",
+    "minimax-m3": "https://api.minimax.chat/v1",
+    "glm-5.3": "https://open.bigmodel.cn/api/paas/v4",
+    "kimi-k2.5": "https://api.moonshot.cn/v1",
+}
+
 class ThumbnailButton(wx.Panel):
     def __init__(self, parent, size=(100,80)):
         super().__init__(parent, size=size)
@@ -349,30 +357,19 @@ class SchAiAssistantDialog(wx.Dialog):
         key_row.Add(free_btn, 0, wx.LEFT, 6)
         a_sz.Add(key_row, 0, wx.EXPAND|wx.ALL, 6)
 
-        # Model selection with auto-endpoint
-        MODEL_PRESETS = {
-            "agnes-2.5-flash": ("agnes-2.5-flash", "https://api.agnes-ai.cn/v1/chat/completions"),
-            "agnes-2.5-pro": ("agnes-2.5-pro", "https://api.agnes-ai.cn/v1/chat/completions"),
-            "minimax-m3": ("minimax-m3", "https://api.minimax.chat/v1"),
-            "glm-5.3": ("glm-5.3", "https://open.bigmodel.cn/api/paas/v4"),
-            "kimi-k2.5": ("kimi-k2.5", "https://api.moonshot.cn/v1"),
-        }
-
+        # Model: editable dropdown with presets (select a preset or type a custom name)
         a_sz.Add(wx.StaticText(ab, label="Model:"), 0, wx.TOP|wx.LEFT, 6)
-        model_choices = [f"{m}   ({ep.split('/')[-2]})" for m, (_, ep) in MODEL_PRESETS.items()]
-        self.model_choice = wx.Choice(ab, choices=model_choices)
-        self.model_choice.SetSelection(0)
-        self.model_choice.Bind(wx.EVT_CHOICE, self._on_model_change)
+        self.model_choice = wx.ComboBox(ab, value="agnes-2.5-flash",
+                                        choices=list(MODEL_PRESETS.keys()))
+        self.model_choice.SetToolTip("Select a preset or type a custom model name")
+        self.model_choice.Bind(wx.EVT_COMBOBOX, self._on_model_change)
         a_sz.Add(self.model_choice, 0, wx.EXPAND|wx.ALL, 6)
 
-        # Editable model name field
-        a_sz.Add(wx.StaticText(ab, label="Model Name:"), 0, wx.TOP|wx.LEFT, 6)
-        self.model_name_ctrl = wx.TextCtrl(ab, value="agnes-2.5-flash")
-        self.model_name_ctrl.SetToolTip("Editable: click to modify model name")
-        a_sz.Add(self.model_name_ctrl, 0, wx.EXPAND|wx.ALL, 6)
-
         a_sz.Add(wx.StaticText(ab, label="Endpoint:"), 0, wx.TOP|wx.LEFT, 6)
-        self.endpoint_ctrl = wx.TextCtrl(ab, value=list(MODEL_PRESETS.values())[0][1])
+        endpoint_choices = list(dict.fromkeys(MODEL_PRESETS.values()))
+        self.endpoint_ctrl = wx.ComboBox(ab, value=MODEL_PRESETS["agnes-2.5-flash"],
+                                         choices=endpoint_choices)
+        self.endpoint_ctrl.SetToolTip("Select a preset or type a custom endpoint")
         a_sz.Add(self.endpoint_ctrl, 0, wx.EXPAND|wx.ALL, 6)
 
         # Save API button
@@ -426,12 +423,10 @@ class SchAiAssistantDialog(wx.Dialog):
         pan.SetSizer(sz)
 
     def _on_model_change(self, event):
-        """Auto-update model name and endpoint when preset is selected."""
-        idx = self.model_choice.GetSelection()
-        if idx >= 0:
-            preset = list(MODEL_PRESETS.values())[idx]
-            self.model_name_ctrl.SetValue(preset[0])  # Update model name
-            self.endpoint_ctrl.SetValue(preset[1])  # Update endpoint
+        """Auto-update endpoint when a preset is selected from the dropdown."""
+        name = self.model_choice.GetValue().strip()
+        if name in MODEL_PRESETS:
+            self.endpoint_ctrl.SetValue(MODEL_PRESETS[name])
 
     def _on_save_api(self, event):
         """Save API settings to settings.json."""
@@ -549,7 +544,7 @@ class SchAiAssistantDialog(wx.Dialog):
         try:
             from sch_ai_assistant import analyze_pin_diagram
             endpoint = self.endpoint_ctrl.GetValue().strip() or "https://api.agnes-ai.cn/v1/chat/completions"
-            model = self.model_name_ctrl.GetValue().strip() or "agnes-2.5-flash"
+            model = self.model_choice.GetValue().strip() or "agnes-2.5-flash"
             b64 = base64.b64encode(image_bytes).decode("utf-8")
             pins = analyze_pin_diagram(self.api_key, model, endpoint, b64)
             _log(f"[ANALYZE] got {len(pins) if pins else 0} pins")
@@ -583,7 +578,7 @@ class SchAiAssistantDialog(wx.Dialog):
         try:
             import requests
             endpoint = self.endpoint_ctrl.GetValue().strip() or "https://api.agnes-ai.cn/v1/chat/completions"
-            model = self.model_name_ctrl.GetValue().strip() or "agnes-2.5-flash"
+            model = self.model_choice.GetValue().strip() or "agnes-2.5-flash"
             headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
             payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
             resp = requests.post(endpoint, headers=headers, json=payload, timeout=60)
