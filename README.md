@@ -16,10 +16,10 @@ KiCad 10+ 插件：AI 驱动的符号引脚助手，从芯片数据手册引脚�
 ## 安装
 
 1. 将 `com_github_haydenhu_sch-ai-assistant` 目录放入 KiCad 插件目录：
-   - Windows: `%APPDATA%\kicad\10.0\scripting\plugins\`
-   - Linux: `~/.config/kicad/10.0/scripting/plugins/`
+   - Windows: `%APPDATA%\kicad\10.0\3rdparty\plugins\`
+   - Linux: `~/.config/kicad/10.0/3rdparty/plugins/`
 2. 重启 KiCad
-3. 在原理图编辑器中，点击菜单 **文件 → 插件 → AI Pin Assistant**
+3. 在原理图编辑器或符号编辑器中，点击菜单 **文件 → 插件 → AI Pin Assistant**
 
 ## 使用步骤
 
