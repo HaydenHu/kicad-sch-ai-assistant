@@ -33,7 +33,7 @@ SIDE_CHOICES = ["left","right","top","bottom"]
 MODEL_PRESETS = {
     "agnes-2.5-flash": {
         "endpoint": "https://api.agnes-ai.cn/v1/chat/completions",
-        "api_key": ""
+        "api_key": "sk-your-agnes-key-here"
     },
     "agnes-2.5-pro": {
         "endpoint": "https://api.agnes-ai.cn/v1/chat/completions",
@@ -366,15 +366,16 @@ class SchAiAssistantDialog(wx.Dialog):
         ab = wx.StaticBox(pan, label=T("api_settings"))
         a_sz = wx.StaticBoxSizer(ab, wx.VERTICAL)
 
-        # API Key
+        # API Key (editable dropdown with presets)
         a_sz.Add(wx.StaticText(ab, label=T("api_key")+":"), 0, wx.TOP|wx.LEFT, 6)
-        key_row = wx.BoxSizer(wx.HORIZONTAL)
-        self.api_key_ctrl = wx.TextCtrl(ab, value=self.api_key, style=wx.TE_PASSWORD)
-        key_row.Add(self.api_key_ctrl, 1, wx.EXPAND|wx.RIGHT, 6)
+        api_key_presets = [MODEL_PRESETS[m]["api_key"] for m in MODEL_PRESETS if MODEL_PRESETS[m]["api_key"]]
+        self.api_key_ctrl = wx.ComboBox(ab, value=self.api_key if self.api_key else (api_key_presets[0] if api_key_presets else ""),
+                                        choices=api_key_presets if api_key_presets else ["(输入自定义 API Key)"])
+        self.api_key_ctrl.SetToolTip(T("api_key_hint"))
+        a_sz.Add(self.api_key_ctrl, 0, wx.EXPAND|wx.ALL, 6)
         free_btn = wx.Button(ab, label=T("free_key"), size=(100, -1))
         free_btn.Bind(wx.EVT_BUTTON, lambda e: __import__('webbrowser').open("https://agnes-ai.cn/settings/apiKeys"))
-        key_row.Add(free_btn, 0, wx.LEFT, 6)
-        a_sz.Add(key_row, 0, wx.EXPAND|wx.ALL, 6)
+        a_sz.Add(free_btn, 0, wx.ALIGN_RIGHT|wx.ALL, 6)
 
         # Model: editable dropdown with presets (select a preset or type a custom name)
         a_sz.Add(wx.StaticText(ab, label=T("model")+":"), 0, wx.TOP|wx.LEFT, 6)
@@ -442,11 +443,13 @@ class SchAiAssistantDialog(wx.Dialog):
         pan.SetSizer(sz)
 
     def _on_model_change(self, event):
-        """Auto-update endpoint and api_key_hint when a preset is selected."""
+        """Auto-update endpoint and api_key when a preset is selected."""
         name = self.model_choice.GetValue().strip()
         if name in MODEL_PRESETS:
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
+            if preset["api_key"]:
+                self.api_key_ctrl.SetValue(preset["api_key"])
 
     def _on_save_api(self, event):
         """Save API settings to settings.json."""
