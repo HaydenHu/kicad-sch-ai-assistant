@@ -471,6 +471,10 @@ class SchAiAssistantDialog(wx.Dialog):
         """Auto-update endpoint and api_key when a preset is selected."""
         name = self.model_choice.GetValue().strip()
         if name in MODEL_PRESETS:
+            # Auto-save current model's key before switching
+            if hasattr(self, '_current_api_key') and self._current_api_key:
+                self._save_current_model_key()
+            
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
             # Load key for this model from stored settings
@@ -480,6 +484,38 @@ class SchAiAssistantDialog(wx.Dialog):
             # Mark as not user-entered since we just loaded it
             if hasattr(self, '_user_entered_key'):
                 delattr(self, '_user_entered_key')
+    
+    def _save_current_model_key(self):
+        """Save the current model's API key to settings."""
+        try:
+            current_model = getattr(self, 'model_choice', None)
+            if current_model:
+                current_model = current_model.GetValue().strip()
+            else:
+                return
+            
+            settings_path = os.path.join(self.plugin_dir, "settings.json")
+            settings = {}
+            if os.path.exists(settings_path):
+                with open(settings_path, "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+            
+            # Save current model's key
+            settings[current_model] = {
+                "api_key": _base64_encode(self._current_api_key)
+            }
+            
+            # Preserve preset keys for other models
+            for model_name, preset in MODEL_PRESETS.items():
+                if model_name != current_model and preset.get("api_key"):
+                    if model_name not in settings:
+                        settings[model_name] = {}
+                    settings[model_name]["api_key"] = _base64_encode(preset["api_key"])
+            
+            with open(settings_path, "w", encoding="utf-8") as f:
+                json.dump(settings, f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
 
     def _on_api_key_change(self, event):
         """Handle API key input: mask as user types and mark as user-entered."""
