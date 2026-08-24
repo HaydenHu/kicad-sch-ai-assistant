@@ -33,7 +33,7 @@ SIDE_CHOICES = ["left","right","top","bottom"]
 MODEL_PRESETS = {
     "agnes-2.5-flash": {
         "endpoint": "https://api.agnes-ai.cn/v1/chat/completions",
-        "api_key": "sk-your-agnes-key-here"
+        "api_key": "sk-H6dvNuYBnFoRapkiRjvX06xvewuIjqXV3rlaxUTfZIsjNHty"
     },
     "agnes-2.5-pro": {
         "endpoint": "https://api.agnes-ai.cn/v1/chat/completions",
@@ -366,17 +366,6 @@ class SchAiAssistantDialog(wx.Dialog):
         ab = wx.StaticBox(pan, label=T("api_settings"))
         a_sz = wx.StaticBoxSizer(ab, wx.VERTICAL)
 
-        # API Key (editable dropdown with presets)
-        a_sz.Add(wx.StaticText(ab, label=T("api_key")+":"), 0, wx.TOP|wx.LEFT, 6)
-        api_key_presets = [MODEL_PRESETS[m]["api_key"] for m in MODEL_PRESETS if MODEL_PRESETS[m]["api_key"]]
-        self.api_key_ctrl = wx.ComboBox(ab, value=self.api_key if self.api_key else (api_key_presets[0] if api_key_presets else ""),
-                                        choices=api_key_presets if api_key_presets else ["(输入自定义 API Key)"])
-        self.api_key_ctrl.SetToolTip(T("api_key_hint"))
-        a_sz.Add(self.api_key_ctrl, 0, wx.EXPAND|wx.ALL, 6)
-        free_btn = wx.Button(ab, label=T("free_key"), size=(100, -1))
-        free_btn.Bind(wx.EVT_BUTTON, lambda e: __import__('webbrowser').open("https://agnes-ai.cn/settings/apiKeys"))
-        a_sz.Add(free_btn, 0, wx.ALIGN_RIGHT|wx.ALL, 6)
-
         # Model: editable dropdown with presets (select a preset or type a custom name)
         a_sz.Add(wx.StaticText(ab, label=T("model")+":"), 0, wx.TOP|wx.LEFT, 6)
         self.model_choice = wx.ComboBox(ab, value="agnes-2.5-flash",
@@ -391,6 +380,17 @@ class SchAiAssistantDialog(wx.Dialog):
                                          choices=endpoint_choices)
         self.endpoint_ctrl.SetToolTip(T("endpoint_hint"))
         a_sz.Add(self.endpoint_ctrl, 0, wx.EXPAND|wx.ALL, 6)
+
+        # API Key (editable dropdown with presets)
+        a_sz.Add(wx.StaticText(ab, label=T("api_key")+":"), 0, wx.TOP|wx.LEFT, 6)
+        api_key_presets = [MODEL_PRESETS[m]["api_key"] for m in MODEL_PRESETS if MODEL_PRESETS[m]["api_key"]]
+        self.api_key_ctrl = wx.ComboBox(ab, value=self.api_key if self.api_key else (api_key_presets[0] if api_key_presets else ""),
+                                        choices=api_key_presets if api_key_presets else ["(输入自定义 API Key)"])
+        self.api_key_ctrl.SetToolTip(T("api_key_hint"))
+        a_sz.Add(self.api_key_ctrl, 0, wx.EXPAND|wx.ALL, 6)
+        free_btn = wx.Button(ab, label=T("free_key"), size=(100, -1))
+        free_btn.Bind(wx.EVT_BUTTON, lambda e: __import__('webbrowser').open("https://agnes-ai.cn/settings/apiKeys"))
+        a_sz.Add(free_btn, 0, wx.ALIGN_RIGHT|wx.ALL, 6)
 
         # Save API button
         save_api_btn = wx.Button(ab, label=T("save_key"))
