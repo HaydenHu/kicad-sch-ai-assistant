@@ -273,10 +273,8 @@ class SchAiAssistantDialog(wx.Dialog):
         self._current_api_key = self._load_model_api_key(default_model)
         # Chat log uses wx.TextCtrl for native scrolling
         self._init_ui()
-        # Set the initial API key display after UI is created
-        if hasattr(self, 'api_key_ctrl'):
-            self.api_key_ctrl.SetValue(self._mask_key_display(self._current_api_key))
-        
+        # Create settings dialog early to properly initialize it
+        self._create_settings_dlg()
         # Initialize settings dialog with correct model and key
         if hasattr(self, 'settings_dlg') and hasattr(self, 'model_choice') and hasattr(self, 'api_key_ctrl'):
             self.model_choice.SetValue(self._get_default_model())
