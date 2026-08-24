@@ -15,9 +15,9 @@
             "description": "Analyze chip datasheet pin diagrams with AI and generate KiCad schematic symbols",
             "show-button": true,
             "scopes": ["symbol", "schematic", "pcb"],
-            "entrypoint": "plugins/sch_ai_assistant.py",
-            "icons-light": ["plugins/icon.png", "plugins/icon@2x.png"],
-            "icons-dark": ["plugins/icon.png", "plugins/icon@2x.png"]
+            "entrypoint": "sch_ai_assistant.py",
+            "icons-light": ["icon.png", "icon@2x.png"],
+            "icons-dark": ["icon.png", "icon@2x.png"]
         }
     ]
 }
