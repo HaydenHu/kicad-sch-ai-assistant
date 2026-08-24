@@ -270,6 +270,9 @@ class SchAiAssistantDialog(wx.Dialog):
         self._load_default_model()
         # Chat log uses wx.TextCtrl for native scrolling
         self._init_ui()
+        # Initialize current API key after UI is created
+        if hasattr(self, 'model_choice') and hasattr(self, 'api_key_ctrl'):
+            self._current_api_key = self._load_model_api_key(self.model_choice.GetValue())
         self.CentreOnParent()
         _log("Dialog initialized")
 
@@ -483,8 +486,7 @@ class SchAiAssistantDialog(wx.Dialog):
             self._current_api_key = stored_key
             self.api_key_ctrl.SetValue(self._mask_key_display(stored_key))
             # Mark as not user-entered since we just loaded it
-            if hasattr(self, '_user_entered_key'):
-                delattr(self, '_user_entered_key')
+            self._user_entered_key = False
             # Save this model as default for next time
             self._save_default_model()
     
