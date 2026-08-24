@@ -386,7 +386,7 @@ class SchAiAssistantDialog(wx.Dialog):
 
         a_sz.Add(wx.StaticText(ab, label=T("endpoint")+":"), 0, wx.TOP|wx.LEFT, 6)
         endpoint_choices = list(dict.fromkeys([p["endpoint"] for p in MODEL_PRESETS.values()]))
-        self.endpoint_ctrl = wx.ComboBox(ab, value=MODEL_PRESETS["agnes-2.5-flash"],
+        self.endpoint_ctrl = wx.ComboBox(ab, value=MODEL_PRESETS["agnes-2.5-flash"]["endpoint"],
                                          choices=endpoint_choices)
         self.endpoint_ctrl.SetToolTip(T("endpoint_hint"))
         a_sz.Add(self.endpoint_ctrl, 0, wx.EXPAND|wx.ALL, 6)
