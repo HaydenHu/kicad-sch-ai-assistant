@@ -276,6 +276,13 @@ class SchAiAssistantDialog(wx.Dialog):
         # Set the initial API key display after UI is created
         if hasattr(self, 'api_key_ctrl'):
             self.api_key_ctrl.SetValue(self._mask_key_display(self._current_api_key))
+        
+        # Initialize settings dialog with correct model and key
+        if hasattr(self, 'settings_dlg') and hasattr(self, 'model_choice') and hasattr(self, 'api_key_ctrl'):
+            self.model_choice.SetValue(self._get_default_model())
+            stored_key = self._load_model_api_key(self._get_default_model())
+            self._current_api_key = stored_key
+            self.api_key_ctrl.SetValue(self._mask_key_display(stored_key))
         self.CentreOnParent()
         _log("Dialog initialized")
 
@@ -479,7 +486,7 @@ class SchAiAssistantDialog(wx.Dialog):
         name = self.model_choice.GetValue().strip()
         if name in MODEL_PRESETS:
             # Auto-save current model's key before switching
-            if hasattr(self, '_current_api_key') and self._current_api_key:
+            if hasattr(self, '_current_api_key') and getattr(self, '_current_api_key', ''):
                 self._save_current_model_key()
             
             preset = MODEL_PRESETS[name]
