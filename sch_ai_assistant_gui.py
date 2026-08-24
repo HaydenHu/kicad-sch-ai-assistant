@@ -875,7 +875,17 @@ class SchAiAssistantDialog(wx.Dialog):
             pass
 
     def _load_api_key(self):
+        """Load the default model's API key from settings."""
         try:
-            with open(os.path.join(self.plugin_dir, "settings.json"), "r") as f:
-                return json.load(f).get("api_key", "sk-H6dvNuYBnFoRapkiRjvX06xvewuIjqXV3rlaxUTfZIsjNHty")
-        except Exception: return ""
+            settings_path = os.path.join(self.plugin_dir, "settings.json")
+            if os.path.exists(settings_path):
+                with open(settings_path, "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+                # Get default model name
+                default_model = settings.get("default_model", "agnes-2.5-flash")
+                encoded = settings.get(default_model, {}).get("api_key", "")
+                return _base64_decode(encoded)
+        except Exception:
+            pass
+        # Return empty string - no hardcoded keys
+        return ""
