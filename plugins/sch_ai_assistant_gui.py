@@ -358,7 +358,7 @@ class SchAiAssistantDialog(wx.Dialog):
         """Create the settings dialog with API and Symbol settings."""
         self.settings_dlg = wx.Dialog(self, title=T("settings_title"),
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        self.settings_dlg.SetSize((420, 600))
+        self.settings_dlg.SetSize((420, 700))
         pan = wx.Panel(self.settings_dlg)
         sz = wx.BoxSizer(wx.VERTICAL)
 
