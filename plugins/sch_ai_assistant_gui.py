@@ -448,8 +448,7 @@ class SchAiAssistantDialog(wx.Dialog):
         if name in MODEL_PRESETS:
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
-            if preset["api_key"]:
-                self.api_key_ctrl.SetValue(preset["api_key"])
+            self.api_key_ctrl.SetValue(preset["api_key"])
 
     def _on_save_api(self, event):
         """Save API settings to settings.json."""
