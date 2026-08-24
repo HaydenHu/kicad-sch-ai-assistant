@@ -29,7 +29,7 @@
       "version": "1.0.0",
       "status": "stable",
       "kicad_version": "10.0",
-      "runtime": "python"
+      "runtime": "ipc"
     }
   ]
 }
