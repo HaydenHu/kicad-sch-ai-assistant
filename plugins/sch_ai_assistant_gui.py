@@ -231,6 +231,10 @@ class SchAiAssistantDialog(wx.Dialog):
         super().__init__(parent, title=T("title"), size=(1100,750),
                          style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX)
         self.plugin_dir = plugin_dir
+        # Load plugin icon
+        _icon_path = os.path.join(self.plugin_dir, "icon.png")
+        if os.path.exists(_icon_path):
+            self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_PNG))
         self.api_key = self._load_api_key()
         self._last_image_bytes = None
         # Chat log uses wx.TextCtrl for native scrolling
