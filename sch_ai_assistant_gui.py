@@ -265,6 +265,8 @@ class SchAiAssistantDialog(wx.Dialog):
         _icon_path = os.path.join(self.plugin_dir, "icon.png")
         if os.path.exists(_icon_path):
             self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_PNG))
+        self._syncing_key_display = False  # guard against programmatic SetValue re-entry
+        self._last_model = self._get_default_model()
         self.api_key = self._load_api_key()
         self._last_image_bytes = None
         self._load_default_model()
@@ -280,7 +282,9 @@ class SchAiAssistantDialog(wx.Dialog):
             self.model_choice.SetValue(self._get_default_model())
             stored_key = self._load_model_api_key(self._get_default_model())
             self._current_api_key = stored_key
-            self.api_key_ctrl.SetValue(self._mask_key_display(stored_key))
+            # Sync the key actually used by API requests with the current model
+            self.api_key = stored_key
+            self._set_key_display(stored_key)
         self.CentreOnParent()
         _log("Dialog initialized")
 
@@ -485,11 +489,12 @@ class SchAiAssistantDialog(wx.Dialog):
         _log(f"[MODEL_CHANGE] Switching to model: {name}")
         _log(f"[MODEL_CHANGE] Current _current_api_key: {getattr(self, '_current_api_key', 'NOT_SET')}")
         if name in MODEL_PRESETS:
-            # Auto-save current model's key before switching
-            if hasattr(self, '_current_api_key') and getattr(self, '_current_api_key', ''):
-                self._save_current_model_key()
-                _log(f"[MODEL_CHANGE] Saved current model's key")
-            
+            # Auto-save the PREVIOUS model's key before switching
+            old_model = getattr(self, '_last_model', None)
+            if old_model and old_model != name and getattr(self, '_current_api_key', ''):
+                self._save_model_key(old_model, self._current_api_key)
+                _log(f"[MODEL_CHANGE] Saved previous model's key ({old_model})")
+
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
             # Load key for this model from stored settings
@@ -500,43 +505,40 @@ class SchAiAssistantDialog(wx.Dialog):
                 _log(f"[MODEL_CHANGE] No stored key for {name}, using empty")
             else:
                 _log(f"[MODEL_CHANGE] Loaded stored key for {name}: {stored_key[:10]}...")
-            
+
+            # Sync both the key used by API requests and the current model's key
             self._current_api_key = stored_key
-            self.api_key_ctrl.SetValue(self._mask_key_display(stored_key))
+            self.api_key = stored_key
+            self._last_model = name
+            self._set_key_display(stored_key)
             _log(f"[MODEL_CHANGE] Updated api_key_ctrl display")
             # Mark as not user-entered since we just loaded it
             self._user_entered_key = False
             # Save this model as default for next time
             self._save_default_model()
             _log(f"[MODEL_CHANGE] Saved default model")
-    
-    def _save_current_model_key(self):
-        """Save the current model's API key to settings."""
+
+    def _save_model_key(self, model_name, key):
+        """Save the given API key for a specific model to settings."""
         try:
-            current_model = getattr(self, 'model_choice', None)
-            if current_model:
-                current_model = current_model.GetValue().strip()
-            else:
-                return
-            
             settings_path = os.path.join(self.plugin_dir, "settings.json")
             settings = {}
             if os.path.exists(settings_path):
                 with open(settings_path, "r", encoding="utf-8") as f:
                     settings = json.load(f)
-            
-            # Save current model's key
-            settings[current_model] = {
-                "api_key": _base64_encode(self._current_api_key)
+
+            # Save this model's key
+            settings[model_name] = {
+                "api_key": _base64_encode(key)
             }
-            
-            # Preserve preset keys for other models
-            for model_name, preset in MODEL_PRESETS.items():
-                if model_name != current_model and preset.get("api_key"):
-                    if model_name not in settings:
-                        settings[model_name] = {}
-                    settings[model_name]["api_key"] = _base64_encode(preset["api_key"])
-            
+
+            # Preserve preset keys for other models (only if not already stored)
+            for preset_model, preset in MODEL_PRESETS.items():
+                if preset_model != model_name and preset.get("api_key") and preset_model not in settings:
+                    settings[preset_model] = {
+                        "api_key": _base64_encode(preset["api_key"])
+                    }
+
             with open(settings_path, "w", encoding="utf-8") as f:
                 json.dump(settings, f, indent=2, ensure_ascii=False)
         except Exception:
@@ -544,16 +546,31 @@ class SchAiAssistantDialog(wx.Dialog):
 
     def _on_api_key_change(self, event):
         """Handle API key input: mask as user types and mark as user-entered."""
+        if getattr(self, '_syncing_key_display', False):
+            return
         key = self.api_key_ctrl.GetValue()
-        # Check if this is different from all preset masks (meaning user typed something new)
-        is_custom = not any(
-            self._mask_key_display(p["api_key"]) == key 
-            for p in MODEL_PRESETS.values()
-        )
-        if is_custom:
-            self._user_entered_key = True
-        self._current_api_key = key  # Store raw key
-        self.api_key_ctrl.SetValue(self._mask_key_display(key))
+        # If the user picked a preset mask from the dropdown, restore the real preset key
+        real_key = None
+        for p in MODEL_PRESETS.values():
+            if p["api_key"] and self._mask_key_display(p["api_key"]) == key:
+                real_key = p["api_key"]
+                break
+        if real_key is not None:
+            self._current_api_key = real_key
+            self.api_key = real_key
+            self._user_entered_key = False
+        else:
+            # Check if this is different from all preset masks (meaning user typed something new)
+            is_custom = not any(
+                self._mask_key_display(p["api_key"]) == key
+                for p in MODEL_PRESETS.values()
+            )
+            if is_custom:
+                self._user_entered_key = True
+            self._current_api_key = key  # Store raw key
+            self.api_key = key
+        # Refresh masked display (guarded so this doesn't re-enter)
+        self._set_key_display(self._current_api_key)
 
     def _load_model_api_key(self, model_name):
         """Load stored API key for a specific model."""
@@ -575,13 +592,21 @@ class SchAiAssistantDialog(wx.Dialog):
             return key[:6] + "•" * (len(key) - 10) + key[-4:]
         return "•" * len(key)
 
+    def _set_key_display(self, key):
+        """Set the masked API key display without triggering change handlers."""
+        self._syncing_key_display = True
+        try:
+            self.api_key_ctrl.SetValue(self._mask_key_display(key))
+        finally:
+            self._syncing_key_display = False
+
     def _mask_api_key(self):
         """Mask API key display: show first 6 and last 4 chars."""
         if hasattr(self, '_current_api_key'):
-            self.api_key_ctrl.SetValue(self._mask_key_display(self._current_api_key))
+            self._set_key_display(self._current_api_key)
         else:
             key = self.api_key_ctrl.GetValue()
-            self.api_key_ctrl.SetValue(self._mask_key_display(key))
+            self._set_key_display(key)
 
     def _on_save_api(self, event):
         """Save API settings to settings.json (per-model with base64 encoding)."""
