@@ -383,7 +383,11 @@ class SchAiAssistantDialog(wx.Dialog):
 
         # API Key (editable dropdown with presets, masked display)
         a_sz.Add(wx.StaticText(ab, label=T("api_key")+":"), 0, wx.TOP|wx.LEFT, 6)
-        api_key_presets = [MODEL_PRESETS[m]["api_key"] for m in MODEL_PRESETS if MODEL_PRESETS[m]["api_key"]]
+        # Create masked presets for display
+        api_key_presets_raw = [MODEL_PRESETS[m]["api_key"] for m in MODEL_PRESETS if MODEL_PRESETS[m]["api_key"]]
+        def _mask_key(k):
+            return k[:6] + "•" * (len(k) - 10) + k[-4:] if len(k) > 10 else "•" * len(k)
+        api_key_presets = [_mask_key(k) for k in api_key_presets_raw]
         self.api_key_ctrl = wx.ComboBox(ab, value=self.api_key if self.api_key else (api_key_presets[0] if api_key_presets else ""),
                                         choices=api_key_presets if api_key_presets else ["(输入自定义 API Key)"])
         self.api_key_ctrl.SetToolTip(T("api_key_hint"))
@@ -453,21 +457,27 @@ class SchAiAssistantDialog(wx.Dialog):
         if name in MODEL_PRESETS:
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
-            self.api_key_ctrl.SetValue(preset["api_key"])
-            self._mask_api_key()
+            # Store raw key, then mask display
+            self._current_api_key = preset["api_key"]
+            self.api_key_ctrl.SetValue(self._mask_key_display(preset["api_key"]))
+
+    def _mask_key_display(self, key):
+        """Return masked version of API key for display."""
+        if len(key) > 10:
+            return key[:6] + "•" * (len(key) - 10) + key[-4:]
+        return "•" * len(key)
 
     def _mask_api_key(self):
         """Mask API key display: show first 6 and last 4 chars."""
-        key = self.api_key_ctrl.GetValue()
-        if len(key) > 10:
-            masked = key[:6] + "•" * (len(key) - 10) + key[-4:]
-            self.api_key_ctrl.SetValue(masked)
+        if hasattr(self, '_current_api_key'):
+            self.api_key_ctrl.SetValue(self._mask_key_display(self._current_api_key))
         else:
-            self.api_key_ctrl.SetValue("•" * len(key))
+            key = self.api_key_ctrl.GetValue()
+            self.api_key_ctrl.SetValue(self._mask_key_display(key))
 
     def _on_save_api(self, event):
         """Save API settings to settings.json."""
-        self.api_key = self.api_key_ctrl.GetValue().strip()
+        self.api_key = getattr(self, '_current_api_key', self.api_key_ctrl.GetValue().strip())
         try:
             with open(os.path.join(self.plugin_dir, "settings.json"), "w") as f:
                 json.dump({"api_key": self.api_key}, f)
