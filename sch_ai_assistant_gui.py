@@ -267,6 +267,7 @@ class SchAiAssistantDialog(wx.Dialog):
             self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_PNG))
         self.api_key = self._load_api_key()
         self._last_image_bytes = None
+        self._load_default_model()
         # Chat log uses wx.TextCtrl for native scrolling
         self._init_ui()
         self.CentreOnParent()
@@ -383,7 +384,7 @@ class SchAiAssistantDialog(wx.Dialog):
 
         # Model: editable dropdown with presets (select a preset or type a custom name)
         a_sz.Add(wx.StaticText(ab, label=T("model")+":"), 0, wx.TOP|wx.LEFT, 6)
-        self.model_choice = wx.ComboBox(ab, value="agnes-2.5-flash",
+        self.model_choice = wx.ComboBox(ab, value=self._get_default_model(),
                                         choices=list(MODEL_PRESETS.keys()))
         self.model_choice.SetToolTip(T("model_hint"))
         self.model_choice.Bind(wx.EVT_COMBOBOX, self._on_model_change)
@@ -484,6 +485,8 @@ class SchAiAssistantDialog(wx.Dialog):
             # Mark as not user-entered since we just loaded it
             if hasattr(self, '_user_entered_key'):
                 delattr(self, '_user_entered_key')
+            # Save this model as default for next time
+            self._save_default_model()
     
     def _save_current_model_key(self):
         """Save the current model's API key to settings."""
@@ -823,6 +826,37 @@ class SchAiAssistantDialog(wx.Dialog):
             if dlg.ShowModal() == wx.ID_OK:
                 with open(dlg.GetPath(), "w", encoding="utf-8") as f: json.dump(data, f, indent=2)
                 self._add_msg("system", T("exported", path=dlg.GetPath()))
+
+    def _get_default_model(self):
+        """Get the default model from settings."""
+        try:
+            settings_path = os.path.join(self.plugin_dir, "settings.json")
+            if os.path.exists(settings_path):
+                with open(settings_path, "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+                return settings.get("default_model", "agnes-2.5-flash")
+        except Exception:
+            pass
+        return "agnes-2.5-flash"
+    
+    def _load_default_model(self):
+        """Load the default model setting."""
+        pass  # Model is loaded in _init_ui
+    
+    def _save_default_model(self):
+        """Save the current model as default."""
+        try:
+            settings_path = os.path.join(self.plugin_dir, "settings.json")
+            settings = {}
+            if os.path.exists(settings_path):
+                with open(settings_path, "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+            current_model = self.model_choice.GetValue().strip() if hasattr(self, 'model_choice') else "agnes-2.5-flash"
+            settings["default_model"] = current_model
+            with open(settings_path, "w", encoding="utf-8") as f:
+                json.dump(settings, f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
 
     def _load_api_key(self):
         try:
