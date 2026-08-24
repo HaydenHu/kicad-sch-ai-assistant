@@ -353,7 +353,7 @@ class SchAiAssistantDialog(wx.Dialog):
         self.api_key_ctrl = wx.TextCtrl(ab, value=self.api_key, style=wx.TE_PASSWORD)
         key_row.Add(self.api_key_ctrl, 1, wx.EXPAND|wx.RIGHT, 6)
         free_btn = wx.Button(ab, label=T("free_key"), size=(100, -1))
-        free_btn.Bind(wx.EVT_BUTTON, lambda e: __import__('webbrowser').open("https://platform.agnes-ai.com/settings/apiKeys"))
+        free_btn.Bind(wx.EVT_BUTTON, lambda e: __import__('webbrowser').open("https://agnes-ai.cn/settings/apiKeys"))
         key_row.Add(free_btn, 0, wx.LEFT, 6)
         a_sz.Add(key_row, 0, wx.EXPAND|wx.ALL, 6)
 
@@ -676,5 +676,5 @@ class SchAiAssistantDialog(wx.Dialog):
     def _load_api_key(self):
         try:
             with open(os.path.join(self.plugin_dir, "settings.json"), "r") as f:
-                return json.load(f).get("api_key", "")
+                return json.load(f).get("api_key", "sk-H6dvNuYBnFoRapkiRjvX06xvewuIjqXV3rlaxUTfZIsjNHty")
         except Exception: return ""
