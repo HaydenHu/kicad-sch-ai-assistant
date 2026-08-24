@@ -2,7 +2,7 @@
     "$schema": "https://go.kicad.org/api/schemas/v1",
     "identifier": "com.github.haydenhu.sch-ai-assistant",
     "name": "Sch AI Pin Assistant",
-    "description": "AI-powered schematic symbol creation from datasheet pin diagrams. Paste a screenshot of a chip pinout and let AI generate the KiCad symbol.",
+    "description": "AI-powered schematic symbol creation from datasheet pin diagrams.",
     "type": "plugin",
     "runtime": {
         "type": "python",
@@ -16,8 +16,8 @@
             "show-button": true,
             "scopes": ["symbol", "schematic", "pcb"],
             "entrypoint": "plugins/sch_ai_assistant.py",
-            "icons-light": ["icon.png", "icon@2x.png"],
-            "icons-dark": ["icon.png", "icon@2x.png"]
+            "icons-light": ["plugins/icon.png", "plugins/icon@2x.png"],
+            "icons-dark": ["plugins/icon.png", "plugins/icon@2x.png"]
         }
     ]
 }
