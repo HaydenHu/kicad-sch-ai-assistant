@@ -268,11 +268,14 @@ class SchAiAssistantDialog(wx.Dialog):
         self.api_key = self._load_api_key()
         self._last_image_bytes = None
         self._load_default_model()
+        # Initialize current API key early
+        default_model = self._get_default_model()
+        self._current_api_key = self._load_model_api_key(default_model)
         # Chat log uses wx.TextCtrl for native scrolling
         self._init_ui()
-        # Initialize current API key after UI is created
-        if hasattr(self, 'model_choice') and hasattr(self, 'api_key_ctrl'):
-            self._current_api_key = self._load_model_api_key(self.model_choice.GetValue())
+        # Set the initial API key display after UI is created
+        if hasattr(self, 'api_key_ctrl'):
+            self.api_key_ctrl.SetValue(self._mask_key_display(self._current_api_key))
         self.CentreOnParent()
         _log("Dialog initialized")
 
