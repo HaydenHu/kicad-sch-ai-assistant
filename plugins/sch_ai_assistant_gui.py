@@ -352,7 +352,7 @@ class SchAiAssistantDialog(wx.Dialog):
         a_sz = wx.StaticBoxSizer(ab, wx.VERTICAL)
 
         # API Key
-        a_sz.Add(wx.StaticText(ab, label="API Key:"), 0, wx.TOP|wx.LEFT, 6)
+        a_sz.Add(wx.StaticText(ab, label=T("api_key")+":"), 0, wx.TOP|wx.LEFT, 6)
         key_row = wx.BoxSizer(wx.HORIZONTAL)
         self.api_key_ctrl = wx.TextCtrl(ab, value=self.api_key, style=wx.TE_PASSWORD)
         key_row.Add(self.api_key_ctrl, 1, wx.EXPAND|wx.RIGHT, 6)
@@ -362,18 +362,18 @@ class SchAiAssistantDialog(wx.Dialog):
         a_sz.Add(key_row, 0, wx.EXPAND|wx.ALL, 6)
 
         # Model: editable dropdown with presets (select a preset or type a custom name)
-        a_sz.Add(wx.StaticText(ab, label="Model:"), 0, wx.TOP|wx.LEFT, 6)
+        a_sz.Add(wx.StaticText(ab, label=T("model")+":"), 0, wx.TOP|wx.LEFT, 6)
         self.model_choice = wx.ComboBox(ab, value="agnes-2.5-flash",
                                         choices=list(MODEL_PRESETS.keys()))
-        self.model_choice.SetToolTip("Select a preset or type a custom model name")
+        self.model_choice.SetToolTip(T("model_hint"))
         self.model_choice.Bind(wx.EVT_COMBOBOX, self._on_model_change)
         a_sz.Add(self.model_choice, 0, wx.EXPAND|wx.ALL, 6)
 
-        a_sz.Add(wx.StaticText(ab, label="Endpoint:"), 0, wx.TOP|wx.LEFT, 6)
+        a_sz.Add(wx.StaticText(ab, label=T("endpoint")+":"), 0, wx.TOP|wx.LEFT, 6)
         endpoint_choices = list(dict.fromkeys(MODEL_PRESETS.values()))
         self.endpoint_ctrl = wx.ComboBox(ab, value=MODEL_PRESETS["agnes-2.5-flash"],
                                          choices=endpoint_choices)
-        self.endpoint_ctrl.SetToolTip("Select a preset or type a custom endpoint")
+        self.endpoint_ctrl.SetToolTip(T("endpoint_hint"))
         a_sz.Add(self.endpoint_ctrl, 0, wx.EXPAND|wx.ALL, 6)
 
         # Save API button
@@ -386,37 +386,37 @@ class SchAiAssistantDialog(wx.Dialog):
         sb = wx.StaticBox(pan, label=T("symbol_settings"))
         s_sz = wx.StaticBoxSizer(sb, wx.VERTICAL)
 
-        s_sz.Add(wx.StaticText(sb, label="Symbol Name:"), 0, wx.TOP|wx.LEFT, 6)
+        s_sz.Add(wx.StaticText(sb, label=T("symbol_name")+":"), 0, wx.TOP|wx.LEFT, 6)
         self.sym_name_ctrl = wx.TextCtrl(sb, value="NEW_CHIP")
         s_sz.Add(self.sym_name_ctrl, 0, wx.EXPAND|wx.ALL, 4)
 
-        s_sz.Add(wx.StaticText(sb, label="Ref Prefix:"), 0, wx.TOP|wx.LEFT, 6)
+        s_sz.Add(wx.StaticText(sb, label=T("ref_prefix")+":"), 0, wx.TOP|wx.LEFT, 6)
         self.ref_prefix_ctrl = wx.TextCtrl(sb, value="U")
         s_sz.Add(self.ref_prefix_ctrl, 0, wx.EXPAND|wx.ALL, 4)
 
-        s_sz.Add(wx.StaticText(sb, label="Pin Length (mm):"), 0, wx.TOP|wx.LEFT, 6)
+        s_sz.Add(wx.StaticText(sb, label=T("pin_length")), 0, wx.TOP|wx.LEFT, 6)
         self.pin_len_ctrl = wx.SpinCtrlDouble(sb, value="2.54", min=1.0, max=20.0, inc=0.5)
         self.pin_len_ctrl.SetDigits(2)
         s_sz.Add(self.pin_len_ctrl, 0, wx.EXPAND|wx.ALL, 4)
 
-        s_sz.Add(wx.StaticText(sb, label="Pin Spacing (mm):"), 0, wx.TOP|wx.LEFT, 6)
+        s_sz.Add(wx.StaticText(sb, label=T("pin_spacing")), 0, wx.TOP|wx.LEFT, 6)
         self.pin_spacing_ctrl = wx.SpinCtrlDouble(sb, value="2.54", min=1.0, max=20.0, inc=0.5)
         self.pin_spacing_ctrl.SetDigits(2)
         s_sz.Add(self.pin_spacing_ctrl, 0, wx.EXPAND|wx.ALL, 4)
 
-        self.show_numbers_cb = wx.CheckBox(sb, label="Show Pin Numbers")
+        self.show_numbers_cb = wx.CheckBox(sb, label=T("show_numbers"))
         self.show_numbers_cb.SetValue(True)
         s_sz.Add(self.show_numbers_cb, 0, wx.LEFT|wx.BOTTOM, 8)
 
-        self.show_names_cb = wx.CheckBox(sb, label="Show Pin Names")
+        self.show_names_cb = wx.CheckBox(sb, label=T("show_names"))
         self.show_names_cb.SetValue(True)
         s_sz.Add(self.show_names_cb, 0, wx.LEFT|wx.BOTTOM, 8)
         sz.Add(s_sz, 0, wx.EXPAND|wx.ALL, 8)
 
         # ── Dialog Buttons ──
         bb = wx.StdDialogButtonSizer()
-        ok_btn = wx.Button(pan, wx.ID_OK, "OK")
-        cancel_btn = wx.Button(pan, wx.ID_CANCEL, "Cancel")
+        ok_btn = wx.Button(pan, wx.ID_OK, T("ok"))
+        cancel_btn = wx.Button(pan, wx.ID_CANCEL, T("cancel"))
         bb.AddButton(ok_btn)
         bb.AddButton(cancel_btn)
         bb.Realize()
