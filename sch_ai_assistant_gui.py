@@ -494,7 +494,13 @@ class SchAiAssistantDialog(wx.Dialog):
             self.endpoint_ctrl.SetValue(preset["endpoint"])
             # Load key for this model from stored settings
             stored_key = self._load_model_api_key(name)
-            _log(f"[MODEL_CHANGE] Loaded stored key for {name}: {stored_key[:10] if stored_key else 'EMPTY'}...")
+            # If no stored key exists for this model, use empty string
+            if not stored_key:
+                stored_key = ""
+                _log(f"[MODEL_CHANGE] No stored key for {name}, using empty")
+            else:
+                _log(f"[MODEL_CHANGE] Loaded stored key for {name}: {stored_key[:10]}...")
+            
             self._current_api_key = stored_key
             self.api_key_ctrl.SetValue(self._mask_key_display(stored_key))
             _log(f"[MODEL_CHANGE] Updated api_key_ctrl display")
