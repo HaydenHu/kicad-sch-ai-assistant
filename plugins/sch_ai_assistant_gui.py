@@ -395,7 +395,8 @@ class SchAiAssistantDialog(wx.Dialog):
         btn_row.Add(free_btn, 0, wx.RIGHT, 6)
         save_api_btn = wx.Button(ab, label=T("save_key"))
         save_api_btn.Bind(wx.EVT_BUTTON, self._on_save_api)
-        btn_row.Add(save_api_btn, 0, wx.ALIGN_RIGHT)
+        btn_row.AddStretchSpacer(1)
+        btn_row.Add(save_api_btn, 0)
         a_sz.Add(btn_row, 0, wx.EXPAND|wx.RIGHT|wx.LEFT, 6)
 
 
