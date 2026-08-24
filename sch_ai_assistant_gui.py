@@ -482,21 +482,27 @@ class SchAiAssistantDialog(wx.Dialog):
     def _on_model_change(self, event):
         """Auto-update endpoint and api_key when a preset is selected."""
         name = self.model_choice.GetValue().strip()
+        _log(f"[MODEL_CHANGE] Switching to model: {name}")
+        _log(f"[MODEL_CHANGE] Current _current_api_key: {getattr(self, '_current_api_key', 'NOT_SET')}")
         if name in MODEL_PRESETS:
             # Auto-save current model's key before switching
             if hasattr(self, '_current_api_key') and getattr(self, '_current_api_key', ''):
                 self._save_current_model_key()
+                _log(f"[MODEL_CHANGE] Saved current model's key")
             
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
             # Load key for this model from stored settings
             stored_key = self._load_model_api_key(name)
+            _log(f"[MODEL_CHANGE] Loaded stored key for {name}: {stored_key[:10] if stored_key else 'EMPTY'}...")
             self._current_api_key = stored_key
             self.api_key_ctrl.SetValue(self._mask_key_display(stored_key))
+            _log(f"[MODEL_CHANGE] Updated api_key_ctrl display")
             # Mark as not user-entered since we just loaded it
             self._user_entered_key = False
             # Save this model as default for next time
             self._save_default_model()
+            _log(f"[MODEL_CHANGE] Saved default model")
     
     def _save_current_model_key(self):
         """Save the current model's API key to settings."""
