@@ -541,6 +541,12 @@ class SchAiAssistantDialog(wx.Dialog):
             settings[current_model] = {
                 "api_key": _base64_encode(self.api_key)
             }
+            # Preserve preset keys for other models that have defaults
+            for model_name, preset in MODEL_PRESETS.items():
+                if model_name != current_model and preset.get("api_key"):
+                    if model_name not in settings:
+                        settings[model_name] = {}
+                    settings[model_name]["api_key"] = _base64_encode(preset["api_key"])
             with open(settings_path, "w", encoding="utf-8") as f:
                 json.dump(settings, f, indent=2, ensure_ascii=False)
             wx.MessageBox(T("api_saved"), "Settings", wx.ICON_INFORMATION)
