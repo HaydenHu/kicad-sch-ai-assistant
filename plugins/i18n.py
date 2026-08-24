@@ -97,6 +97,12 @@ STRINGS = {
         "chat_sidebar": "",
         "chat_send": "",
         "extracted_pins": "已提取引脚",
+        "api_settings": "API 设置",
+        "symbol_settings": "符号设置",
+        "ok": "确定",
+        "cancel": "取消",
+        "model_hint": "选择预设或输入自定义模型名",
+        "endpoint_hint": "选择预设或输入自定义端点",
     },
     "en": {
         "title": "AI Pin Assistant",
@@ -150,6 +156,12 @@ STRINGS = {
         "click_close": "Click image or press Escape to close",
 
         "extracted_pins": "Extracted Pins",
+        "api_settings": "API Settings",
+        "symbol_settings": "Symbol Settings",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "model_hint": "Select a preset or type a custom model name",
+        "endpoint_hint": "Select a preset or type a custom endpoint",
     },
 }
 
