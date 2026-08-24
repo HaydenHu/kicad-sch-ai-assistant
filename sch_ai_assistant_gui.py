@@ -381,12 +381,13 @@ class SchAiAssistantDialog(wx.Dialog):
         self.endpoint_ctrl.SetToolTip(T("endpoint_hint"))
         a_sz.Add(self.endpoint_ctrl, 0, wx.EXPAND|wx.ALL, 6)
 
-        # API Key (editable dropdown with presets)
+        # API Key (editable dropdown with presets, masked display)
         a_sz.Add(wx.StaticText(ab, label=T("api_key")+":"), 0, wx.TOP|wx.LEFT, 6)
         api_key_presets = [MODEL_PRESETS[m]["api_key"] for m in MODEL_PRESETS if MODEL_PRESETS[m]["api_key"]]
         self.api_key_ctrl = wx.ComboBox(ab, value=self.api_key if self.api_key else (api_key_presets[0] if api_key_presets else ""),
                                         choices=api_key_presets if api_key_presets else ["(输入自定义 API Key)"])
         self.api_key_ctrl.SetToolTip(T("api_key_hint"))
+        self._mask_api_key()  # Mask the display
         a_sz.Add(self.api_key_ctrl, 0, wx.EXPAND|wx.ALL, 6)
         # Free key and Save button on same row
         btn_row = wx.BoxSizer(wx.HORIZONTAL)
@@ -453,6 +454,16 @@ class SchAiAssistantDialog(wx.Dialog):
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
             self.api_key_ctrl.SetValue(preset["api_key"])
+            self._mask_api_key()
+
+    def _mask_api_key(self):
+        """Mask API key display: show first 6 and last 4 chars."""
+        key = self.api_key_ctrl.GetValue()
+        if len(key) > 10:
+            masked = key[:6] + "•" * (len(key) - 10) + key[-4:]
+            self.api_key_ctrl.SetValue(masked)
+        else:
+            self.api_key_ctrl.SetValue("•" * len(key))
 
     def _on_save_api(self, event):
         """Save API settings to settings.json."""
