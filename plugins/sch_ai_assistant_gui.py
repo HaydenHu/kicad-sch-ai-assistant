@@ -35,7 +35,7 @@ MODEL_PRESETS = {
     "agnes-2.5-pro": "https://api.agnes-ai.cn/v1/chat/completions",
     "minimax-m3": "https://api.minimax.chat/v1",
     "kimi-k2.5": "https://api.moonshot.cn/v1",
-    "deepseek-v4-flash-vision-exp": "https://api.deepseek.com/v1",
+    "deepseek-v4-flash-vision-exp": "https://api.deepseek.com/chat/completions",
 }
 
 class ThumbnailButton(wx.Panel):
