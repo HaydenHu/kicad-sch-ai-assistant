@@ -502,7 +502,7 @@ class SchAiAssistantDialog(wx.Dialog):
                 with open(settings_path, "r", encoding="utf-8") as f:
                     settings = json.load(f)
                 encoded = settings.get(model_name, {}).get("api_key", "")
-                return self._base64_decode(encoded)
+                return _base64_decode(encoded)
         except Exception:
             pass
         # Return preset key if no stored key
@@ -539,7 +539,7 @@ class SchAiAssistantDialog(wx.Dialog):
             current_model = self.model_choice.GetValue().strip()
             # Save current model's key with base64 encoding
             settings[current_model] = {
-                "api_key": self._base64_encode(self.api_key)
+                "api_key": _base64_encode(self.api_key)
             }
             with open(settings_path, "w", encoding="utf-8") as f:
                 json.dump(settings, f, indent=2, ensure_ascii=False)
