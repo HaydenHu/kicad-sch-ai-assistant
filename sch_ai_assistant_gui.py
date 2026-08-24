@@ -392,6 +392,7 @@ class SchAiAssistantDialog(wx.Dialog):
                                         choices=api_key_presets if api_key_presets else ["(输入自定义 API Key)"])
         self.api_key_ctrl.SetToolTip(T("api_key_hint"))
         self._mask_api_key()  # Mask the display
+        self.api_key_ctrl.Bind(wx.EVT_TEXT, self._on_api_key_change)
         a_sz.Add(self.api_key_ctrl, 0, wx.EXPAND|wx.ALL, 6)
         # Free key and Save button on same row
         btn_row = wx.BoxSizer(wx.HORIZONTAL)
@@ -457,9 +458,16 @@ class SchAiAssistantDialog(wx.Dialog):
         if name in MODEL_PRESETS:
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
-            # Store raw key, then mask display
+            # Store raw key from preset, then mask display
             self._current_api_key = preset["api_key"]
             self.api_key_ctrl.SetValue(self._mask_key_display(preset["api_key"]))
+
+    def _on_api_key_change(self, event):
+        """Handle API key input: mask as user types."""
+        key = self.api_key_ctrl.GetValue()
+        # Check if this looks like a user-entered key (not matching any preset display)
+        self._current_api_key = key  # Store raw key
+        self.api_key_ctrl.SetValue(self._mask_key_display(key))
 
     def _mask_key_display(self, key):
         """Return masked version of API key for display."""
@@ -477,7 +485,7 @@ class SchAiAssistantDialog(wx.Dialog):
 
     def _on_save_api(self, event):
         """Save API settings to settings.json."""
-        self.api_key = getattr(self, '_current_api_key', self.api_key_ctrl.GetValue().strip())
+        self.api_key = getattr(self, '_current_api_key', '').strip()
         try:
             with open(os.path.join(self.plugin_dir, "settings.json"), "w") as f:
                 json.dump({"api_key": self.api_key}, f)
