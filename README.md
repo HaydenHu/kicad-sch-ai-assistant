@@ -15,7 +15,7 @@ KiCad 10+ 插件：AI 驱动的符号引脚助手，从芯片数据手册引脚�
 
 ## 安装
 
-###   KiCad 扩展内容管理器（推荐）
+###     KiCad 扩展内容管理器（推荐）
 
 1. 从 [Releases](https://github.com/HaydenHu/kicad-sch-ai-assistant/releases) 下载 `sch-ai-assistant.zip`
 2. **偏好设置 → 插件** → 勾选 **启用 KiCad API**
