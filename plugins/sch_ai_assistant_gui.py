@@ -388,14 +388,17 @@ class SchAiAssistantDialog(wx.Dialog):
                                         choices=api_key_presets if api_key_presets else ["(输入自定义 API Key)"])
         self.api_key_ctrl.SetToolTip(T("api_key_hint"))
         a_sz.Add(self.api_key_ctrl, 0, wx.EXPAND|wx.ALL, 6)
+        # Free key and Save button on same row
+        btn_row = wx.BoxSizer(wx.HORIZONTAL)
         free_btn = wx.Button(ab, label=T("free_key"), size=(100, -1))
         free_btn.Bind(wx.EVT_BUTTON, lambda e: __import__('webbrowser').open("https://agnes-ai.cn/settings/apiKeys"))
-        a_sz.Add(free_btn, 0, wx.ALIGN_RIGHT|wx.ALL, 6)
-
-        # Save API button
+        btn_row.Add(free_btn, 0, wx.RIGHT, 6)
         save_api_btn = wx.Button(ab, label=T("save_key"))
         save_api_btn.Bind(wx.EVT_BUTTON, self._on_save_api)
-        a_sz.Add(save_api_btn, 0, wx.ALIGN_RIGHT|wx.ALL, 6)
+        btn_row.Add(save_api_btn, 0, wx.ALIGN_RIGHT)
+        a_sz.Add(btn_row, 0, wx.EXPAND|wx.RIGHT|wx.LEFT, 6)
+
+
         sz.Add(a_sz, 0, wx.EXPAND|wx.ALL, 8)
 
         # ── Symbol Settings Section ──
