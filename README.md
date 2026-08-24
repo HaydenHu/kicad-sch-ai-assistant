@@ -2,7 +2,8 @@
 
 KiCad 10+ 插件：AI 驱动的符号引脚助手，从芯片数据手册引脚图自动生成 KiCad 原理图符号。
 
-![Plugin Screenshot](screenshot.png)
+<img width="1651" height="796" alt="image" src="https://github.com/user-attachments/assets/7e5c52a6-093f-4604-aa3f-c2a33043051b" />
+
 
 ## 功能
 
@@ -20,9 +21,8 @@ KiCad 10+ 插件：AI 驱动的符号引脚助手，从芯片数据手册引脚�
 1. 从 [Releases](https://github.com/HaydenHu/kicad-sch-ai-assistant/releases) 下载 `sch-ai-assistant.zip`
 2. **偏好设置 → 插件** → 勾选 **启用 KiCad API**
 3. **扩展内容管理器 → 从文件安装** → 选择下载的 zip 文件
-4. 点击 **应用挂起的更改**
-5. 重启 KiCad
-6. 在原理图编辑器或符号编辑器中，点击菜单 **文件 → 插件 → AI Pin Assistant**
+4. 重启 KiCad
+5. 在原理图编辑器或符号编辑器中，点击菜单 **文件 → 插件 → AI Pin Assistant**
 
 ## 使用步骤
 
