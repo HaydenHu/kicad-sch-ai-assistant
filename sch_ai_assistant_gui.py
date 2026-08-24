@@ -458,14 +458,16 @@ class SchAiAssistantDialog(wx.Dialog):
         if name in MODEL_PRESETS:
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
-            # Store raw key from preset, then mask display
-            self._current_api_key = preset["api_key"]
-            self.api_key_ctrl.SetValue(self._mask_key_display(preset["api_key"]))
+            # Only reset API key if user hasn't manually entered one
+            if not hasattr(self, '_user_entered_key'):
+                self._current_api_key = preset["api_key"]
+                self.api_key_ctrl.SetValue(self._mask_key_display(preset["api_key"]))
 
     def _on_api_key_change(self, event):
-        """Handle API key input: mask as user types."""
+        """Handle API key input: mask as user types and mark as user-entered."""
         key = self.api_key_ctrl.GetValue()
-        # Check if this looks like a user-entered key (not matching any preset display)
+        # Mark that user has manually entered this key
+        self._user_entered_key = True
         self._current_api_key = key  # Store raw key
         self.api_key_ctrl.SetValue(self._mask_key_display(key))
 
@@ -486,6 +488,9 @@ class SchAiAssistantDialog(wx.Dialog):
     def _on_save_api(self, event):
         """Save API settings to settings.json."""
         self.api_key = getattr(self, '_current_api_key', '').strip()
+        # Reset user-entered flag after save
+        if hasattr(self, '_user_entered_key'):
+            delattr(self, '_user_entered_key')
         try:
             with open(os.path.join(self.plugin_dir, "settings.json"), "w") as f:
                 json.dump({"api_key": self.api_key}, f)
