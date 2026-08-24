@@ -458,16 +458,28 @@ class SchAiAssistantDialog(wx.Dialog):
         if name in MODEL_PRESETS:
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
-            # Only reset API key if user hasn't manually entered one
-            if not hasattr(self, '_user_entered_key'):
-                self._current_api_key = preset["api_key"]
-                self.api_key_ctrl.SetValue(self._mask_key_display(preset["api_key"]))
+            # Check if current key matches any preset display (meaning user hasn't customized)
+            current_key = self.api_key_ctrl.GetValue()
+            matches_preset = any(
+                self._mask_key_display(p["api_key"]) == current_key 
+                for p in MODEL_PRESETS.values()
+            )
+            if matches_preset:
+                self._user_entered_key = False
+            # Always update to preset key
+            self._current_api_key = preset["api_key"]
+            self.api_key_ctrl.SetValue(self._mask_key_display(preset["api_key"]))
 
     def _on_api_key_change(self, event):
         """Handle API key input: mask as user types and mark as user-entered."""
         key = self.api_key_ctrl.GetValue()
-        # Mark that user has manually entered this key
-        self._user_entered_key = True
+        # Check if this is different from all preset masks (meaning user typed something new)
+        is_custom = not any(
+            self._mask_key_display(p["api_key"]) == key 
+            for p in MODEL_PRESETS.values()
+        )
+        if is_custom:
+            self._user_entered_key = True
         self._current_api_key = key  # Store raw key
         self.api_key_ctrl.SetValue(self._mask_key_display(key))
 
