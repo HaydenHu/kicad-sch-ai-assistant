@@ -31,11 +31,26 @@ SHAPE_CHOICES = ["line","inverted","clock","inverted_clock",
 SIDE_CHOICES = ["left","right","top","bottom"]
 
 MODEL_PRESETS = {
-    "agnes-2.5-flash": "https://api.agnes-ai.cn/v1/chat/completions",
-    "agnes-2.5-pro": "https://api.agnes-ai.cn/v1/chat/completions",
-    "minimax-m3": "https://api.minimax.chat/v1",
-    "kimi-k2.5": "https://api.moonshot.cn/v1",
-    "deepseek-v4-flash-vision-exp": "https://api.deepseek.com/chat/completions",
+    "agnes-2.5-flash": {
+        "endpoint": "https://api.agnes-ai.cn/v1/chat/completions",
+        "api_key": ""
+    },
+    "agnes-2.5-pro": {
+        "endpoint": "https://api.agnes-ai.cn/v1/chat/completions",
+        "api_key": ""
+    },
+    "minimax-m3": {
+        "endpoint": "https://api.minimax.chat/v1",
+        "api_key": ""
+    },
+    "kimi-k2.5": {
+        "endpoint": "https://api.moonshot.cn/v1",
+        "api_key": ""
+    },
+    "deepseek-v4-flash-vision-exp": {
+        "endpoint": "https://api.deepseek.com/chat/completions",
+        "api_key": ""
+    },
 }
 
 class ThumbnailButton(wx.Panel):
@@ -370,7 +385,7 @@ class SchAiAssistantDialog(wx.Dialog):
         a_sz.Add(self.model_choice, 0, wx.EXPAND|wx.ALL, 6)
 
         a_sz.Add(wx.StaticText(ab, label=T("endpoint")+":"), 0, wx.TOP|wx.LEFT, 6)
-        endpoint_choices = list(dict.fromkeys(MODEL_PRESETS.values()))
+        endpoint_choices = list(dict.fromkeys([p["endpoint"] for p in MODEL_PRESETS.values()]))
         self.endpoint_ctrl = wx.ComboBox(ab, value=MODEL_PRESETS["agnes-2.5-flash"],
                                          choices=endpoint_choices)
         self.endpoint_ctrl.SetToolTip(T("endpoint_hint"))
@@ -427,10 +442,11 @@ class SchAiAssistantDialog(wx.Dialog):
         pan.SetSizer(sz)
 
     def _on_model_change(self, event):
-        """Auto-update endpoint when a preset is selected from the dropdown."""
+        """Auto-update endpoint and api_key_hint when a preset is selected."""
         name = self.model_choice.GetValue().strip()
         if name in MODEL_PRESETS:
-            self.endpoint_ctrl.SetValue(MODEL_PRESETS[name])
+            preset = MODEL_PRESETS[name]
+            self.endpoint_ctrl.SetValue(preset["endpoint"])
 
     def _on_save_api(self, event):
         """Save API settings to settings.json."""

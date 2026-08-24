@@ -59,7 +59,7 @@ STRINGS = {
         "settings_title": "设置",
         "api_key": "API Key",
         "model": "模型",
-        "endpoint": "端点",
+         "endpoint": "接入点",
         "save_key": "保存 Key",
         "free_key": "免费获取",
         "symbol_name": "符号名称",
@@ -120,7 +120,7 @@ STRINGS = {
         "settings_title": "Settings",
         "api_key": "API Key",
         "model": "Model",
-        "endpoint": "Endpoint",
+         "endpoint": "接入点",
         "save_key": "Save Key",
         "free_key": "Get Free Key",
         "symbol_name": "Symbol Name",
@@ -161,7 +161,7 @@ STRINGS = {
         "ok": "OK",
         "cancel": "Cancel",
         "model_hint": "Select a preset or type a custom model name",
-        "endpoint_hint": "Select a preset or type a custom endpoint",
+        "endpoint_hint": "选择预设或输入自定义接入点",
     },
 }
 
