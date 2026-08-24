@@ -12,8 +12,14 @@ Version: 1.0.0
 import json
 import os
 import re
+import sys
 import textwrap
 from datetime import datetime
+
+# Ensure plugin directory is on sys.path for imports
+_plugin_dir = os.path.dirname(os.path.abspath(__file__))
+if _plugin_dir not in sys.path:
+    sys.path.insert(0, _plugin_dir)
 
 
 def _log_api(msg):
