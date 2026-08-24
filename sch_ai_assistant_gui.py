@@ -494,6 +494,20 @@ class SchAiAssistantDialog(wx.Dialog):
         self._current_api_key = key  # Store raw key
         self.api_key_ctrl.SetValue(self._mask_key_display(key))
 
+    def _load_model_api_key(self, model_name):
+        """Load stored API key for a specific model."""
+        try:
+            settings_path = os.path.join(self.plugin_dir, "settings.json")
+            if os.path.exists(settings_path):
+                with open(settings_path, "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+                encoded = settings.get(model_name, {}).get("api_key", "")
+                return self._base64_decode(encoded)
+        except Exception:
+            pass
+        # Return preset key if no stored key
+        return MODEL_PRESETS.get(model_name, {}).get("api_key", "")
+
     def _mask_key_display(self, key):
         """Return masked version of API key for display."""
         if len(key) > 10:
@@ -510,6 +524,7 @@ class SchAiAssistantDialog(wx.Dialog):
 
     def _on_save_api(self, event):
         """Save API settings to settings.json (per-model with base64 encoding)."""
+        # Get the raw (unmasked) API key
         self.api_key = getattr(self, '_current_api_key', '').strip()
         # Reset user-entered flag after save
         if hasattr(self, '_user_entered_key'):
@@ -527,7 +542,7 @@ class SchAiAssistantDialog(wx.Dialog):
                 "api_key": self._base64_encode(self.api_key)
             }
             with open(settings_path, "w", encoding="utf-8") as f:
-                json.dump(settings, f, indent=2)
+                json.dump(settings, f, indent=2, ensure_ascii=False)
             wx.MessageBox(T("api_saved"), "Settings", wx.ICON_INFORMATION)
         except Exception as e:
             wx.MessageBox(str(e), "Error", wx.ICON_ERROR)
