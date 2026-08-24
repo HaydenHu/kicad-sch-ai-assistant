@@ -522,10 +522,10 @@ def _mask_key_display(self, key):
                     settings = json.load(f)
             # Get current model name
             current_model = self.model_choice.GetValue().strip()
-            # Save current model's key
-            if current_model not in settings:
-                settings[current_model] = {}
-            settings[current_model]["api_key"] = self._base64_encode(self.api_key)
+            # Save current model's key with base64 encoding
+            settings[current_model] = {
+                "api_key": self._base64_encode(self.api_key)
+            }
             with open(settings_path, "w", encoding="utf-8") as f:
                 json.dump(settings, f, indent=2)
             wx.MessageBox(T("api_saved"), "Settings", wx.ICON_INFORMATION)
