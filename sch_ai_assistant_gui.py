@@ -241,6 +241,21 @@ class PinTableGrid(gridlib.Grid):
             self.SetReadOnly(i,0,True)
         self.AutoSize()
 
+def _base64_encode(key):
+    """Simple obfuscation for API key storage."""
+    if not key:
+        return ""
+    return base64.b64encode(key.encode()).decode()
+
+def _base64_decode(encoded):
+    """Decode obfuscated API key."""
+    if not encoded:
+        return ""
+    try:
+        return base64.b64decode(encoded.encode()).decode()
+    except Exception:
+        return ""
+
 class SchAiAssistantDialog(wx.Dialog):
     def __init__(self, parent, plugin_dir):
         super().__init__(parent, title=T("title"), size=(1100,750),
@@ -479,22 +494,7 @@ class SchAiAssistantDialog(wx.Dialog):
         self._current_api_key = key  # Store raw key
         self.api_key_ctrl.SetValue(self._mask_key_display(key))
 
-    def _base64_encode(key):
-    """Simple obfuscation for API key storage."""
-    if not key:
-        return ""
-    return base64.b64encode(key.encode()).decode()
-
-def _base64_decode(encoded):
-    """Decode obfuscated API key."""
-    if not encoded:
-        return ""
-    try:
-        return base64.b64decode(encoded.encode()).decode()
-    except Exception:
-        return ""
-
-def _mask_key_display(self, key):
+    def _mask_key_display(self, key):
         """Return masked version of API key for display."""
         if len(key) > 10:
             return key[:6] + "•" * (len(key) - 10) + key[-4:]
