@@ -102,7 +102,6 @@ STRINGS = {
         "ok": "确定",
         "cancel": "取消",
         "model_hint": "选择预设或输入自定义模型名",
-        "api_key_hint": "选择预设或输入自定义 API Key",
         "endpoint_hint": "选择预设或输入自定义端点",
     },
     "en": {
@@ -163,7 +162,6 @@ STRINGS = {
         "cancel": "Cancel",
         "model_hint": "Select a preset or type a custom model name",
         "api_key_hint": "Select a preset or type a custom API Key",
-        "api_key_hint": "选择预设或输入自定义 API Key",
         "endpoint_hint": "选择预设或输入自定义接入点",
     },
 }
