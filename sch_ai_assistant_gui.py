@@ -458,17 +458,13 @@ class SchAiAssistantDialog(wx.Dialog):
         if name in MODEL_PRESETS:
             preset = MODEL_PRESETS[name]
             self.endpoint_ctrl.SetValue(preset["endpoint"])
-            # Check if current key matches any preset display (meaning user hasn't customized)
-            current_key = self.api_key_ctrl.GetValue()
-            matches_preset = any(
-                self._mask_key_display(p["api_key"]) == current_key 
-                for p in MODEL_PRESETS.values()
-            )
-            if matches_preset:
-                self._user_entered_key = False
-            # Always update to preset key
-            self._current_api_key = preset["api_key"]
-            self.api_key_ctrl.SetValue(self._mask_key_display(preset["api_key"]))
+            # Load key for this model from stored settings
+            stored_key = self._load_model_api_key(name)
+            self._current_api_key = stored_key
+            self.api_key_ctrl.SetValue(self._mask_key_display(stored_key))
+            # Mark as not user-entered since we just loaded it
+            if hasattr(self, '_user_entered_key'):
+                delattr(self, '_user_entered_key')
 
     def _on_api_key_change(self, event):
         """Handle API key input: mask as user types and mark as user-entered."""
@@ -483,7 +479,22 @@ class SchAiAssistantDialog(wx.Dialog):
         self._current_api_key = key  # Store raw key
         self.api_key_ctrl.SetValue(self._mask_key_display(key))
 
-    def _mask_key_display(self, key):
+    def _base64_encode(key):
+    """Simple obfuscation for API key storage."""
+    if not key:
+        return ""
+    return base64.b64encode(key.encode()).decode()
+
+def _base64_decode(encoded):
+    """Decode obfuscated API key."""
+    if not encoded:
+        return ""
+    try:
+        return base64.b64decode(encoded.encode()).decode()
+    except Exception:
+        return ""
+
+def _mask_key_display(self, key):
         """Return masked version of API key for display."""
         if len(key) > 10:
             return key[:6] + "•" * (len(key) - 10) + key[-4:]
@@ -498,14 +509,25 @@ class SchAiAssistantDialog(wx.Dialog):
             self.api_key_ctrl.SetValue(self._mask_key_display(key))
 
     def _on_save_api(self, event):
-        """Save API settings to settings.json."""
+        """Save API settings to settings.json (per-model with base64 encoding)."""
         self.api_key = getattr(self, '_current_api_key', '').strip()
         # Reset user-entered flag after save
         if hasattr(self, '_user_entered_key'):
             delattr(self, '_user_entered_key')
         try:
-            with open(os.path.join(self.plugin_dir, "settings.json"), "w") as f:
-                json.dump({"api_key": self.api_key}, f)
+            settings_path = os.path.join(self.plugin_dir, "settings.json")
+            settings = {}
+            if os.path.exists(settings_path):
+                with open(settings_path, "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+            # Get current model name
+            current_model = self.model_choice.GetValue().strip()
+            # Save current model's key
+            if current_model not in settings:
+                settings[current_model] = {}
+            settings[current_model]["api_key"] = self._base64_encode(self.api_key)
+            with open(settings_path, "w", encoding="utf-8") as f:
+                json.dump(settings, f, indent=2)
             wx.MessageBox(T("api_saved"), "Settings", wx.ICON_INFORMATION)
         except Exception as e:
             wx.MessageBox(str(e), "Error", wx.ICON_ERROR)
